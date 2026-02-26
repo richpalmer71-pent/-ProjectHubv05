@@ -227,7 +227,7 @@ export default function App(){
   :<PasswordGate pwInput={pwInput} setPwInput={setPwInput} pwError={pwError} onSubmit={checkPw} moduleName="Approval Centre"/>);
 
   // EXTERNAL MODULES
-  if(view==="playground") return ML("COLLABORATIVE KICK OFF","PLAYGROUND",C.blue,<Playground/>);
+  if(view==="playground") return ML("COLLABORATIVE KICK OFF","PROJECT PLAYGROUND",C.blue,<Playground/>);
   if(view==="resources") return ML("WHO NEEDS ACCESS","RESOURCE MANAGEMENT",C.red,authed?<ResourceManagement profiles={profiles} addUser={addUser} updateProfile={updateProfile} jobNum={jobNum} brand={brand} title={title} setView={setView}/>:<PasswordGate pwInput={pwInput} setPwInput={setPwInput} pwError={pwError} onSubmit={checkPw} moduleName="Resource Management"/>);
   if(view==="profiles") return ML("TEAM DIRECTORY","PROFILES",C.red,authed?<ResourceManagement profiles={profiles} addUser={addUser} updateProfile={updateProfile} jobNum={jobNum} brand={brand} title={title} setView={setView} initialView="profiles"/>:<PasswordGate pwInput={pwInput} setPwInput={setPwInput} pwError={pwError} onSubmit={checkPw} moduleName="Profiles"/>);
   if(view==="delivery") return ML("DOWNLOADS & DAM","ASSET DELIVERY",C.blue,<AssetDelivery/>);

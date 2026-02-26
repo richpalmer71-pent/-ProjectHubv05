@@ -87,13 +87,10 @@ export function Avatar({ firstName, department, size=36 }) {
 export function BriefStatusSelect({ value, onChange }) {
   const current = BRIEF_STATUSES.find(s => s.key === value) || BRIEF_STATUSES[0];
   return (
-    <div style={{ position:"relative", display:"inline-flex" }}>
-      <select value={value} onChange={e => onChange(e.target.value)}
-        style={{ appearance:"none", WebkitAppearance:"none", padding:"6px 28px 6px 12px", border:`1px solid ${current.color}44`, ...rad, background:current.color+"18", color:current.color, fontSize:10, ...hd, fontFamily:ff, cursor:"pointer", outline:"none" }}>
-        {BRIEF_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
-      </select>
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={current.color} strokeWidth="2.5" strokeLinecap="round" style={{position:"absolute",right:8,top:"50%",transform:"translateY(-50%)",pointerEvents:"none"}}><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
+    <select value={value} onChange={e => onChange(e.target.value)}
+      style={{ padding:"6px 12px", border:`1px solid ${current.color}44`, ...rad, background:current.color+"18", color:current.color, fontSize:10, ...hd, fontFamily:ff, cursor:"pointer", outline:"none" }}>
+      {BRIEF_STATUSES.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+    </select>
   );
 }
 
@@ -110,7 +107,6 @@ export const ICN = {
 };
 
 export const MODULES = [
-  {key:"playground",label:"PLAYGROUND",sub:"Collaborative Kick Off"},
   {key:"overview",label:"CAMPAIGN OVERVIEW",sub:"The Admin Bit"},
   {key:"resources",label:"RESOURCE MANAGEMENT",sub:"Who Needs Access"},
   {key:"toolkit",label:"CAMPAIGN TOOLKIT",sub:"Shared Resources"},
@@ -118,6 +114,7 @@ export const MODULES = [
   {key:"approval",label:"APPROVAL CENTRE",sub:"Project Sign-Off"},
   {key:"delivery",label:"ASSET DELIVERY",sub:"Downloads & DAM"},
   {key:"feedback",label:"FEEDBACK CENTRE",sub:"How Did It Go?"},
+  {key:"playground",label:"PROJECT PLAYGROUND",sub:"Collaborative Kick Off"},
 ];
 
 // Shared Components

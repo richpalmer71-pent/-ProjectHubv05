@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { C, ff, hd, bd, bi, rad, Card, BriefStatusSelect, BRIEF_STATUSES } from "./shared";
+import { useState, useEffect } from "react";
+import { C, ff, hd, bd, bi, rad, Card, BriefStatusSelect, BRIEF_STATUSES, Avatar, DEPT_COLORS } from "./shared";
+
+function useIsMobile(bp=768) {
+  const [mob,setMob]=useState(typeof window!=="undefined"?window.innerWidth<=bp:false);
+  useEffect(()=>{const h=()=>setMob(window.innerWidth<=bp);window.addEventListener("resize",h);return()=>window.removeEventListener("resize",h);},[bp]);
+  return mob;
+}
 
 const PROJECT_STATUSES = [
   {key:"draft",label:"DRAFT",color:C.g70},
@@ -44,6 +50,25 @@ const getEffectiveStatus = (p) => {
 
 const BRANDS = [...new Set(MOCK_PROJECTS.map(p=>p.brand))].sort();
 
+// Simple name-to-department lookup for avatar colours
+const NAME_DEPT = {"Richard Palmer":"Digital","Farah Yousaf":"Digital"};
+
+function AvatarTooltip({ name }) {
+  const [hover, setHover] = useState(false);
+  if(!name) return <div style={{width:28,height:28,borderRadius:14,background:C.g88,display:"flex",alignItems:"center",justifyContent:"center"}}><span style={{fontSize:11,color:C.g70,fontFamily:ff}}>—</span></div>;
+  const firstName = name.split(" ")[0];
+  const dept = NAME_DEPT[name] || "";
+  return (
+    <div style={{position:"relative",display:"inline-flex"}} onMouseEnter={()=>setHover(true)} onMouseLeave={()=>setHover(false)}>
+      <Avatar firstName={firstName} department={dept} size={28}/>
+      {hover&&<div style={{position:"absolute",bottom:"calc(100% + 6px)",left:"50%",transform:"translateX(-50%)",background:C.black,color:C.card,padding:"6px 12px",...rad,fontSize:11,...hd,fontFamily:ff,whiteSpace:"nowrap",zIndex:50,boxShadow:"0 4px 12px rgba(0,0,0,0.15)"}}>
+        <div>{name}</div>
+        {dept&&<div style={{fontSize:9,color:C.g70,fontFamily:ff,marginTop:2}}>{dept.toUpperCase()}</div>}
+      </div>}
+    </div>
+  );
+}
+
 function StatusBadge({status}) {
   const s=PROJECT_STATUSES.find(x=>x.key===status)||PROJECT_STATUSES[0];
   return <span style={{padding:"4px 12px",...rad,background:s.color+"18",color:s.color,fontSize:10,...hd,fontFamily:ff,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:4}}>
@@ -67,6 +92,7 @@ function DaysLabel({end, status}) {
 
 // PROJECT DETAIL VIEW
 function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
+  const mob = useIsMobile();
   const [chFilter,setChFilter]=useState("all");
   const [bsFilter,setBsFilter]=useState("all");
   const es=getEffectiveStatus(project);
@@ -85,58 +111,80 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
       BACK TO DASHBOARD
     </button>
-    <Card style={{padding:"24px 28px"}}>
-      <div style={{display:"flex",alignItems:"flex-start",justifyContent:"space-between",marginBottom:16}}>
+    <Card style={{padding:mob?"16px 18px":"24px 28px"}}>
+      <div style={{display:"flex",flexDirection:mob?"column":"row",alignItems:mob?"flex-start":"flex-start",justifyContent:"space-between",marginBottom:16,gap:mob?10:0}}>
         <div>
           <div style={{fontSize:11,...hd,color:C.g70,fontFamily:ff,marginBottom:4}}>{project.brand}</div>
-          <div style={{fontSize:22,...hd,color:C.black,fontFamily:ff,letterSpacing:"0.02em"}}>{project.title}</div>
-          <div style={{fontSize:13,...bd,color:C.g50,fontFamily:ff,marginTop:4}}>{project.id} · {project.start} → {project.end}</div>
+          <div style={{fontSize:mob?18:22,...hd,color:C.black,fontFamily:ff,letterSpacing:"0.02em"}}>{project.title}</div>
+          <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff,marginTop:4}}>{project.id} · {project.start} → {project.end}</div>
         </div>
-        <div style={{display:"flex",flexDirection:"column",alignItems:"flex-end",gap:6}}><StatusBadge status={es}/><DaysLabel end={project.end} status={es}/></div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <StatusBadge status={es}/><DaysLabel end={project.end} status={es}/>
+          {project.owner&&<AvatarTooltip name={project.owner}/>}
+        </div>
       </div>
-      <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
+      <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
         <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:C.black,fontFamily:ff}}>{totalBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>TOTAL BRIEFS</div></div>
         <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:C.green,fontFamily:ff}}>{completeBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>COMPLETE</div></div>
         <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:totalBriefs-completeBriefs>0?"#f59e0b":C.g70,fontFamily:ff}}>{totalBriefs-completeBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>IN PROGRESS</div></div>
         <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><div style={{flex:1,maxWidth:80,height:6,background:C.g88,...rad,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:pct===100?C.green:C.blue,...rad}}/></div><span style={{fontSize:14,fontWeight:700,color:pct===100?C.green:C.black,fontFamily:ff}}>{pct}%</span></div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>BRIEF PROGRESS</div></div>
       </div>
     </Card>
-    <Card style={{padding:"12px 20px"}}>
-      <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-        <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>FILTER:</span>
-        <div style={{display:"flex",gap:4}}>
-          <button onClick={()=>setChFilter("all")} style={{padding:"6px 14px",border:`1px solid ${chFilter==="all"?C.black:C.g88}`,...rad,background:chFilter==="all"?C.black:C.card,color:chFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
-          {CHANNELS.map(ch=><button key={ch} onClick={()=>setChFilter(f=>f===ch?"all":ch)} style={{padding:"6px 14px",border:`1px solid ${chFilter===ch?CHANNEL_COLORS[ch]:C.g88}`,...rad,background:chFilter===ch?CHANNEL_COLORS[ch]+"18":C.card,color:chFilter===ch?CHANNEL_COLORS[ch]:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{ch.toUpperCase()}</button>)}
-        </div>
-        <div style={{height:20,width:1,background:C.g88}}/>
+    <Card style={{padding:"12px 16px"}}>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          <button onClick={()=>setBsFilter("all")} style={{padding:"6px 14px",border:`1px solid ${bsFilter==="all"?C.black:C.g88}`,...rad,background:bsFilter==="all"?C.black:C.card,color:bsFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
-          {BRIEF_STATUSES.map(s=><button key={s.key} onClick={()=>setBsFilter(f=>f===s.key?"all":s.key)} style={{padding:"6px 14px",border:`1px solid ${bsFilter===s.key?s.color:C.g88}`,...rad,background:bsFilter===s.key?s.color+"18":C.card,color:bsFilter===s.key?s.color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{s.label}</button>)}
+          <button onClick={()=>setChFilter("all")} style={{padding:"6px 12px",border:`1px solid ${chFilter==="all"?C.black:C.g88}`,...rad,background:chFilter==="all"?C.black:C.card,color:chFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
+          {CHANNELS.map(ch=><button key={ch} onClick={()=>setChFilter(f=>f===ch?"all":ch)} style={{padding:"6px 12px",border:`1px solid ${chFilter===ch?CHANNEL_COLORS[ch]:C.g88}`,...rad,background:chFilter===ch?CHANNEL_COLORS[ch]+"18":C.card,color:chFilter===ch?CHANNEL_COLORS[ch]:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{ch.toUpperCase()}</button>)}
+        </div>
+        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+          <button onClick={()=>setBsFilter("all")} style={{padding:"6px 12px",border:`1px solid ${bsFilter==="all"?C.black:C.g88}`,...rad,background:bsFilter==="all"?C.black:C.card,color:bsFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
+          {BRIEF_STATUSES.map(s=><button key={s.key} onClick={()=>setBsFilter(f=>f===s.key?"all":s.key)} style={{padding:"6px 12px",border:`1px solid ${bsFilter===s.key?s.color:C.g88}`,...rad,background:bsFilter===s.key?s.color+"18":C.card,color:bsFilter===s.key?s.color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{s.label}</button>)}
         </div>
       </div>
     </Card>
     {grouped.length===0&&<Card style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>No briefs match your filters.</div></Card>}
     {grouped.map(grp=>(<div key={grp.channel}>
-      <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8,padding:"0 4px"}}><div style={{width:4,height:16,...rad,background:CHANNEL_COLORS[grp.channel]}}/><span style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>{grp.channel.toUpperCase()} ASSETS</span><span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{grp.briefs.length} brief{grp.briefs.length!==1?"s":""}</span></div>
-      <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden",marginBottom:8}}>
-        <div style={{display:"grid",gridTemplateColumns:"50px 1fr 100px 100px 170px 90px",padding:"10px 20px",background:C.g94,borderBottom:`1px solid ${C.g88}`,gap:10}}>
-          <span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>ID</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRIEF NAME</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>ASSIGNED TO</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>STATUS</span><span></span>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8,padding:"0 4px"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:4,height:16,...rad,background:CHANNEL_COLORS[grp.channel]}}/><span style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>{grp.channel.toUpperCase()} ASSETS</span><span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{grp.briefs.length} brief{grp.briefs.length!==1?"s":""}</span></div>{!mob&&<span style={{fontSize:10,...bd,color:C.g70,fontFamily:ff,fontStyle:"italic"}}>Select a brief to update</span>}</div>
+
+      {mob ? (
+        /* MOBILE: Brief Cards */
+        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
+          {grp.briefs.map(b=>(<div key={b.id+b.channel} style={{background:C.card,border:`1px solid ${C.g88}`,...rad,padding:16,borderLeft:`4px solid ${CHANNEL_COLORS[grp.channel]}`}}>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
+              <div style={{display:"flex",alignItems:"center",gap:8}}>
+                <span style={{fontSize:11,fontWeight:700,color:C.g50,fontFamily:ff}}>{b.id}</span>
+                <span style={{fontSize:13,fontWeight:600,color:C.black,fontFamily:ff}}>{b.name}</span>
+              </div>
+              {b.assignedTo&&<AvatarTooltip name={b.assignedTo}/>}
+            </div>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
+              <span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{b.locale}</span>
+              <BriefStatusSelect value={b.status} onChange={v=>onUpdateStatus(project.id,b.id,b.channel,v)}/>
+            </div>
+          </div>))}
         </div>
-        {grp.briefs.map((b,idx)=>(<div key={b.id+b.channel} style={{display:"grid",gridTemplateColumns:"50px 1fr 100px 100px 170px 90px",padding:"14px 20px",borderBottom:idx<grp.briefs.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,borderLeft:`3px solid ${CHANNEL_COLORS[grp.channel]}`}}>
-          <div style={{fontSize:12,fontWeight:600,color:C.g50,fontFamily:ff}}>{b.id}</div>
-          <div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{b.name}</div>
-          <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff}}>{b.locale}</div>
-          <div style={{fontSize:12,...bd,color:b.assignedTo?C.black:C.g70,fontFamily:ff}}>{b.assignedTo||"—"}</div>
-          <BriefStatusSelect value={b.status} onChange={v=>onUpdateStatus(project.id,b.id,b.channel,v)}/>
-          <button onClick={()=>{}} style={{padding:"6px 12px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.blue,fontSize:10,...hd,fontFamily:ff,cursor:"pointer",whiteSpace:"nowrap"}}>VIEW BRIEF</button>
-        </div>))}
-      </div>
+      ) : (
+        /* DESKTOP: Brief Table */
+        <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden",marginBottom:8}}>
+          <div style={{display:"grid",gridTemplateColumns:"50px 1fr 100px 50px 180px",padding:"10px 20px",background:C.g94,borderBottom:`1px solid ${C.g88}`,gap:10}}>
+            <span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>ID</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRIEF NAME</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>OWNER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>STATUS</span>
+          </div>
+          {grp.briefs.map((b,idx)=>(<div key={b.id+b.channel} style={{display:"grid",gridTemplateColumns:"50px 1fr 100px 50px 180px",padding:"14px 20px",borderBottom:idx<grp.briefs.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,borderLeft:`3px solid ${CHANNEL_COLORS[grp.channel]}`,cursor:"pointer",transition:"background 0.1s"}} onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+            <div style={{fontSize:12,fontWeight:600,color:C.g50,fontFamily:ff}}>{b.id}</div>
+            <div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{b.name}</div>
+            <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff}}>{b.locale}</div>
+            <AvatarTooltip name={b.assignedTo}/>
+            <BriefStatusSelect value={b.status} onChange={v=>onUpdateStatus(project.id,b.id,b.channel,v)}/>
+          </div>))}
+        </div>
+      )}
     </div>))}
   </div>);
 }
 
 // MAIN DASHBOARD
 export default function Dashboard({ setView, setJobNum }) {
+  const mob = useIsMobile();
   const [projects,setProjects]=useState(MOCK_PROJECTS);
   const [selectedProject,setSelectedProject]=useState(null);
   const [filter,setFilter]=useState("all");
@@ -175,51 +223,95 @@ export default function Dashboard({ setView, setJobNum }) {
   // List view
   return (
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
-      <div className="hub-grid-4" style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:12}}>
-        <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:C.black,fontFamily:ff}}>{stats.total}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>TOTAL</div></Card>
-        <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:C.blue,fontFamily:ff}}>{stats.active}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>ACTIVE</div></Card>
-        <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:C.green,fontFamily:ff}}>{stats.delivered}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>DELIVERED</div></Card>
-        <Card style={{padding:"16px 18px",textAlign:"center",border:stats.overdue>0?"1px solid #ef444433":`1px solid ${C.g88}`}}><div style={{fontSize:26,fontWeight:700,color:stats.overdue>0?"#ef4444":C.g70,fontFamily:ff}}>{stats.overdue}</div><div style={{fontSize:9,...hd,color:stats.overdue>0?"#ef4444":C.g70,fontFamily:ff,marginTop:4}}>OVERDUE</div></Card>
+      <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
+        <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.black,fontFamily:ff}}>{stats.total}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>TOTAL</div></Card>
+        <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.blue,fontFamily:ff}}>{stats.active}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>ACTIVE</div></Card>
+        <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.green,fontFamily:ff}}>{stats.delivered}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>DELIVERED</div></Card>
+        <Card style={{padding:"14px 16px",textAlign:"center",border:stats.overdue>0?"1px solid #ef444433":`1px solid ${C.g88}`}}><div style={{fontSize:mob?22:26,fontWeight:700,color:stats.overdue>0?"#ef4444":C.g70,fontFamily:ff}}>{stats.overdue}</div><div style={{fontSize:9,...hd,color:stats.overdue>0?"#ef4444":C.g70,fontFamily:ff,marginTop:4}}>OVERDUE</div></Card>
       </div>
 
-      <Card style={{padding:"14px 20px"}}>
+      <Card style={{padding:"14px 16px"}}>
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
-          <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
-            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search projects..." style={{...bi,width:180,fontSize:13}}/>
-            <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>BRAND:</span><select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Brands</option>{BRANDS.map(b=><option key={b} value={b}>{b}</option>)}</select></div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>CHANNEL:</span><select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Channels</option>{CHANNELS.map(ch=><option key={ch} value={ch}>{ch}</option>)}</select></div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>MONTH:</span><select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Months</option>{MONTHS.map((m,i)=><option key={i} value={i}>{m}</option>)}</select></div>
-            <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>DATE:</span><select value={dateSort} onChange={e=>setDateSort(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="end_asc">Due (Soonest)</option><option value="end_desc">Due (Latest)</option><option value="start_asc">Start (Earliest)</option><option value="start_desc">Start (Latest)</option></select></div>
+          <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+            <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search..." style={{...bi,width:mob?"100%":180,fontSize:13}}/>
+            {mob ? (
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,width:"100%"}}>
+                <select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="all">All Brands</option>{BRANDS.map(b=><option key={b} value={b}>{b}</option>)}</select>
+                <select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="all">All Channels</option>{CHANNELS.map(ch=><option key={ch} value={ch}>{ch}</option>)}</select>
+                <select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="all">All Months</option>{MONTHS.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
+                <select value={dateSort} onChange={e=>setDateSort(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="end_asc">Due (Soonest)</option><option value="end_desc">Due (Latest)</option><option value="start_asc">Start (Earliest)</option><option value="start_desc">Start (Latest)</option></select>
+              </div>
+            ) : (<>
+              <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>BRAND:</span><select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Brands</option>{BRANDS.map(b=><option key={b} value={b}>{b}</option>)}</select></div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>CHANNEL:</span><select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Channels</option>{CHANNELS.map(ch=><option key={ch} value={ch}>{ch}</option>)}</select></div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>MONTH:</span><select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Months</option>{MONTHS.map((m,i)=><option key={i} value={i}>{m}</option>)}</select></div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>DATE:</span><select value={dateSort} onChange={e=>setDateSort(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="end_asc">Due (Soonest)</option><option value="end_desc">Due (Latest)</option><option value="start_asc">Start (Earliest)</option><option value="start_desc">Start (Latest)</option></select></div>
+            </>)}
           </div>
           <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-            <button onClick={()=>setFilter("all")} style={{padding:"6px 14px",border:`1px solid ${filter==="all"?C.black:C.g88}`,...rad,background:filter==="all"?C.black:C.card,color:filter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
-            {PROJECT_STATUSES.map(s=><button key={s.key} onClick={()=>setFilter(f=>f===s.key?"all":s.key)} style={{padding:"6px 14px",border:`1px solid ${filter===s.key?s.color:C.g88}`,...rad,background:filter===s.key?s.color+"18":C.card,color:filter===s.key?s.color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{s.label}</button>)}
+            <button onClick={()=>setFilter("all")} style={{padding:"6px 12px",border:`1px solid ${filter==="all"?C.black:C.g88}`,...rad,background:filter==="all"?C.black:C.card,color:filter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
+            {PROJECT_STATUSES.map(s=><button key={s.key} onClick={()=>setFilter(f=>f===s.key?"all":s.key)} style={{padding:"6px 12px",border:`1px solid ${filter===s.key?s.color:C.g88}`,...rad,background:filter===s.key?s.color+"18":C.card,color:filter===s.key?s.color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{s.label}</button>)}
           </div>
         </div>
       </Card>
 
-      <Card style={{padding:0,overflow:"hidden"}}>
-        <div style={{display:"grid",gridTemplateColumns:"120px 80px 1fr 100px 110px 80px 110px 90px",padding:"12px 20px",background:C.g94,borderBottom:`1px solid ${C.g88}`,gap:10}}>
-          <span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>JOB NUMBER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRAND</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>PROJECT</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRIEF OWNER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>STATUS</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>DUE</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>PROGRESS</span><span></span>
-        </div>
-        {filtered.length===0&&<div style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>No projects match your filters.</div></div>}
-        {filtered.map((p,idx)=>{const sc=PROJECT_STATUSES.find(x=>x.key===p.effectiveStatus);const tabCol=sc?sc.color:C.g88;return(
-          <div key={p.id} style={{display:"grid",gridTemplateColumns:"120px 80px 1fr 100px 110px 80px 110px 90px",padding:"14px 20px",borderBottom:idx<filtered.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,cursor:"pointer",transition:"background 0.1s",borderLeft:`3px solid ${tabCol}`}}
-            onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            <div style={{fontSize:13,fontWeight:600,color:C.black,fontFamily:ff}}>{p.id}</div>
-            <div style={{fontSize:12,color:C.g50,fontFamily:ff,...bd}}>{p.brand}</div>
-            <div><div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{p.title}</div><div style={{fontSize:11,color:C.g70,fontFamily:ff,...bd,marginTop:1}}>{p.start} → {p.end}</div></div>
-            <div style={{fontSize:12,...bd,color:p.owner?C.black:C.g70,fontFamily:ff}}>{p.owner||"—"}</div>
-            <StatusBadge status={p.effectiveStatus}/>
-            <DaysLabel end={p.end} status={p.effectiveStatus}/>
-            <ProgressBar modules={p.modules}/>
-            <button onClick={(e)=>{e.stopPropagation();setSelectedProject(p.id);}} style={{padding:"6px 12px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.blue,fontSize:10,...hd,fontFamily:ff,cursor:"pointer",whiteSpace:"nowrap"}}>VIEW PROJECT</button>
-          </div>
-        );})}
-      </Card>
+      {filtered.length===0&&<Card style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>No projects match your filters.</div></Card>}
 
-      <div style={{display:"flex",gap:16,flexWrap:"wrap",padding:"4px 0"}}>
-        {PROJECT_STATUSES.map(s=><div key={s.key} style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:8,height:8,borderRadius:4,background:s.color}}/><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>{s.label}</span></div>)}
+      {mob ? (
+        /* MOBILE: Project Cards */
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          {filtered.map(p=>{const sc=PROJECT_STATUSES.find(x=>x.key===p.effectiveStatus);const tabCol=sc?sc.color:C.g88;return(
+            <div key={p.id} onClick={()=>setSelectedProject(p.id)} style={{background:C.card,border:`1px solid ${C.g88}`,...rad,padding:16,borderLeft:`4px solid ${tabCol}`,cursor:"pointer"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <div style={{display:"flex",alignItems:"center",gap:8}}>
+                  <span style={{fontSize:11,fontWeight:700,color:C.g50,fontFamily:ff}}>{p.id}</span>
+                  <span style={{fontSize:11,...hd,color:C.g70,fontFamily:ff}}>{p.brand}</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  {p.owner&&<AvatarTooltip name={p.owner}/>}
+                </div>
+              </div>
+              <div style={{fontSize:15,fontWeight:600,color:C.black,fontFamily:ff,marginBottom:8}}>{p.title}</div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
+                <StatusBadge status={p.effectiveStatus}/>
+                <DaysLabel end={p.end} status={p.effectiveStatus}/>
+              </div>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+                <span style={{fontSize:11,...bd,color:C.g70,fontFamily:ff}}>{p.start} → {p.end}</span>
+                <ProgressBar modules={p.modules}/>
+              </div>
+              {p.briefs.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.g94}`,display:"flex",alignItems:"center",gap:6}}>
+                <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>{p.briefs.length} BRIEF{p.briefs.length!==1?"S":""}</span>
+                <span style={{fontSize:10,...bd,color:C.g70,fontFamily:ff}}>·</span>
+                <span style={{fontSize:10,...bd,color:C.green,fontFamily:ff,fontWeight:600}}>{p.briefs.filter(b=>b.status==="complete").length} COMPLETE</span>
+              </div>}
+            </div>
+          );})}
+        </div>
+      ) : (
+        /* DESKTOP: Project Table */
+        <Card style={{padding:0,overflow:"hidden"}}>
+          <div style={{display:"grid",gridTemplateColumns:"120px 80px 1fr 50px 110px 80px 130px",padding:"12px 20px",background:C.g94,borderBottom:`1px solid ${C.g88}`,gap:10}}>
+            <span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>JOB NUMBER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRAND</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>PROJECT</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>OWNER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>STATUS</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>DUE</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>PROGRESS</span>
+          </div>
+          {filtered.map((p,idx)=>{const sc=PROJECT_STATUSES.find(x=>x.key===p.effectiveStatus);const tabCol=sc?sc.color:C.g88;return(
+            <div key={p.id} style={{display:"grid",gridTemplateColumns:"120px 80px 1fr 50px 110px 80px 130px",padding:"14px 20px",borderBottom:idx<filtered.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,cursor:"pointer",transition:"background 0.1s",borderLeft:`3px solid ${tabCol}`}}
+              onClick={()=>setSelectedProject(p.id)}
+              onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+              <div style={{fontSize:13,fontWeight:600,color:C.black,fontFamily:ff}}>{p.id}</div>
+              <div style={{fontSize:12,color:C.g50,fontFamily:ff,...bd}}>{p.brand}</div>
+              <div><div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{p.title}</div><div style={{fontSize:11,color:C.g70,fontFamily:ff,...bd,marginTop:1}}>{p.start} → {p.end}</div></div>
+              <AvatarTooltip name={p.owner}/>
+              <StatusBadge status={p.effectiveStatus}/>
+              <DaysLabel end={p.end} status={p.effectiveStatus}/>
+              <ProgressBar modules={p.modules}/>
+            </div>
+          );})}
+        </Card>
+      )}
+
+      <div style={{display:"flex",gap:mob?8:16,flexWrap:"wrap",padding:"4px 0"}}>
+        {PROJECT_STATUSES.map(s=><div key={s.key} style={{display:"flex",alignItems:"center",gap:4}}><div style={{width:8,height:8,borderRadius:4,background:s.color}}/><span style={{fontSize:mob?9:10,...hd,color:C.g70,fontFamily:ff}}>{s.label}</span></div>)}
       </div>
     </div>
   );
