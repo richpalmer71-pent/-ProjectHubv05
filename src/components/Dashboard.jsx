@@ -24,22 +24,22 @@ const TODAY = new Date().toISOString().slice(0,10);
 
 const MOCK_PROJECTS = [
   { id:"PEN-2025-0042",brand:"Speedo",title:"Summer 25 Launch",status:"in_progress",start:"2025-03-01",end:"2026-06-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Homepage Hero Banner",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PLP Category Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W03",channel:"Web",name:"Homepage Hero Banner",locale:"DE (GER)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf"},{id:"E02",channel:"Email",name:"Promo Follow-Up",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf"},{id:"E03",channel:"Email",name:"Launch Email",locale:"FR (FR)",status:"brief_added",assignedTo:""},{id:"P01",channel:"Paid",name:"PMAX 1200x628",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
+    briefs:[{id:"W01",channel:"Web",name:"Homepage Hero Banner",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PLP Category Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W03",channel:"Web",name:"Homepage Hero Banner",locale:"DE (GER)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-06-01",handoverDate:"2025-05-20"},{id:"E02",channel:"Email",name:"Promo Follow-Up",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf",sendDate:"2025-06-10",handoverDate:"2025-05-28"},{id:"E03",channel:"Email",name:"Launch Email",locale:"FR (FR)",status:"brief_added",assignedTo:"",sendDate:"2025-06-01",handoverDate:"2025-05-20"},{id:"P01",channel:"Paid",name:"PMAX 1200x628",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
   { id:"PEN-2025-0038",brand:"Berghaus",title:"AW25 Digital Campaign",status:"review",start:"2025-02-15",end:"2026-04-30",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Hero Banner — AW25",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PDP Feature Block",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"AW25 Teaser Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf"},{id:"E02",channel:"Email",name:"AW25 Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf"},{id:"P01",channel:"Paid",name:"Display 728x90",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"}]},
+    briefs:[{id:"W01",channel:"Web",name:"Hero Banner — AW25",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PDP Feature Block",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"AW25 Teaser Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-03-15",handoverDate:"2025-03-01"},{id:"E02",channel:"Email",name:"AW25 Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-04-01",handoverDate:"2025-03-18"},{id:"P01",channel:"Paid",name:"Display 728x90",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"}]},
   { id:"PEN-2025-0035",brand:"Canterbury",title:"Six Nations Promo",status:"delivered",start:"2025-01-10",end:"2025-03-20",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
-    briefs:[{id:"W01",channel:"Web",name:"Six Nations Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Builder CTA",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Match Day Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf"},{id:"P01",channel:"Paid",name:"Social 1080x1920",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
+    briefs:[{id:"W01",channel:"Web",name:"Six Nations Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Builder CTA",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Match Day Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-02-10",handoverDate:"2025-01-28"},{id:"P01",channel:"Paid",name:"Social 1080x1920",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
   { id:"PEN-2025-0031",brand:"Speedo",title:"Fastskin Launch",status:"in_progress",start:"2025-01-05",end:"2025-12-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Fastskin PDP Hero",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Technology Explainer",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Pre-Launch Teaser",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf"},{id:"E02",channel:"Email",name:"Launch Day Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf"},{id:"E03",channel:"Email",name:"Launch Day Email",locale:"DE (GER)",status:"with_copy",assignedTo:""},{id:"P01",channel:"Paid",name:"PMAX 1200x300",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Display 300x250",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
+    briefs:[{id:"W01",channel:"Web",name:"Fastskin PDP Hero",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Technology Explainer",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Pre-Launch Teaser",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-08-01",handoverDate:"2025-07-18"},{id:"E02",channel:"Email",name:"Launch Day Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"E03",channel:"Email",name:"Launch Day Email",locale:"DE (GER)",status:"with_copy",assignedTo:"",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"P01",channel:"Paid",name:"PMAX 1200x300",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Display 300x250",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
   { id:"PEN-2025-0029",brand:"Ellesse",title:"SS25 Social Push",status:"briefing",start:"2025-03-10",end:"2026-07-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},
     briefs:[{id:"W01",channel:"Web",name:"Homepage Takeover",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"P01",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"P02",channel:"Paid",name:"Social 1080x1920",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
   { id:"PEN-2024-0112",brand:"Berghaus",title:"Winter 24 Wrap-Up",status:"delivered",start:"2024-09-01",end:"2024-12-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
-    briefs:[{id:"W01",channel:"Web",name:"Winter Sale Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Winter Sale Launch",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf"},{id:"E02",channel:"Email",name:"Last Chance Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf"},{id:"P01",channel:"Paid",name:"Display 970x250",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
+    briefs:[{id:"W01",channel:"Web",name:"Winter Sale Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Winter Sale Launch",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2024-11-01",handoverDate:"2024-10-18"},{id:"E02",channel:"Email",name:"Last Chance Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2024-12-05",handoverDate:"2024-11-22"},{id:"P01",channel:"Paid",name:"Display 970x250",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
   { id:"PEN-2025-0044",brand:"Mitre",title:"Grassroots Kit Launch",status:"draft",start:"2025-04-01",end:"2026-08-01",owner:"",modules:{overview:false,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},briefs:[]},
   { id:"PEN-2025-0048",brand:"Ellesse",title:"Heritage Collection",status:"review",start:"2025-06-01",end:"2026-01-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Heritage Landing Page",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Heritage Landing Page",locale:"FR (FR)",status:"with_copy",assignedTo:""},{id:"E01",channel:"Email",name:"Heritage Launch Email",locale:"UK (ENG)",status:"with_design",assignedTo:"Farah Yousaf"},{id:"P01",channel:"Paid",name:"PMAX 1200x1200",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1350",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
+    briefs:[{id:"W01",channel:"Web",name:"Heritage Landing Page",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Heritage Landing Page",locale:"FR (FR)",status:"with_copy",assignedTo:""},{id:"E01",channel:"Email",name:"Heritage Launch Email",locale:"UK (ENG)",status:"with_design",assignedTo:"Farah Yousaf",sendDate:"2025-09-01",handoverDate:"2025-08-15"},{id:"P01",channel:"Paid",name:"PMAX 1200x1200",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1350",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
   { id:"PEN-2025-0050",brand:"Canterbury",title:"Lions Tour Kit",status:"in_progress",start:"2025-05-01",end:"2026-03-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:false,resources:true,approval:false,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Lions Hero Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Customiser CTA",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Lions Announcement",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf"},{id:"P01",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
+    briefs:[{id:"W01",channel:"Web",name:"Lions Hero Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Customiser CTA",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Lions Announcement",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf",sendDate:"2025-07-01",handoverDate:"2025-06-15"},{id:"P01",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
 ];
 
 const getEffectiveStatus = (p) => {
@@ -95,6 +95,7 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
   const mob = useIsMobile();
   const [chFilter,setChFilter]=useState("all");
   const [bsFilter,setBsFilter]=useState("all");
+  const [briefSort,setBriefSort]=useState("asc");
   const es=getEffectiveStatus(project);
 
   const filtered=briefs.filter(b=>{
@@ -102,7 +103,17 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
     if(bsFilter!=="all"&&b.status!==bsFilter)return false;
     return true;
   });
-  const grouped=CHANNELS.map(ch=>({channel:ch,briefs:filtered.filter(b=>b.channel===ch)})).filter(g=>g.briefs.length>0);
+
+  // Sort briefs within each channel group by sendDate (emails) or keep original order
+  const sortBriefs = (arr) => {
+    return [...arr].sort((a,b) => {
+      const da = a.sendDate || a.handoverDate || "9999-12-31";
+      const db = b.sendDate || b.handoverDate || "9999-12-31";
+      return briefSort === "asc" ? da.localeCompare(db) : db.localeCompare(da);
+    });
+  };
+
+  const grouped=CHANNELS.map(ch=>({channel:ch,briefs:sortBriefs(filtered.filter(b=>b.channel===ch))})).filter(g=>g.briefs.length>0);
   const totalBriefs=briefs.length;const completeBriefs=briefs.filter(b=>b.status==="complete").length;
   const pct=totalBriefs>0?Math.round((completeBriefs/totalBriefs)*100):0;
 
@@ -132,9 +143,16 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
     </Card>
     <Card style={{padding:"12px 16px"}}>
       <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          <button onClick={()=>setChFilter("all")} style={{padding:"6px 12px",border:`1px solid ${chFilter==="all"?C.black:C.g88}`,...rad,background:chFilter==="all"?C.black:C.card,color:chFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
-          {CHANNELS.map(ch=><button key={ch} onClick={()=>setChFilter(f=>f===ch?"all":ch)} style={{padding:"6px 12px",border:`1px solid ${chFilter===ch?CHANNEL_COLORS[ch]:C.g88}`,...rad,background:chFilter===ch?CHANNEL_COLORS[ch]+"18":C.card,color:chFilter===ch?CHANNEL_COLORS[ch]:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{ch.toUpperCase()}</button>)}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
+          <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
+            <button onClick={()=>setChFilter("all")} style={{padding:"6px 12px",border:`1px solid ${chFilter==="all"?C.black:C.g88}`,...rad,background:chFilter==="all"?C.black:C.card,color:chFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
+            {CHANNELS.map(ch=><button key={ch} onClick={()=>setChFilter(f=>f===ch?"all":ch)} style={{padding:"6px 12px",border:`1px solid ${chFilter===ch?CHANNEL_COLORS[ch]:C.g88}`,...rad,background:chFilter===ch?CHANNEL_COLORS[ch]+"18":C.card,color:chFilter===ch?CHANNEL_COLORS[ch]:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{ch.toUpperCase()}</button>)}
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>DATE:</span>
+            <button onClick={()=>setBriefSort("asc")} style={{padding:"6px 12px",border:`1px solid ${briefSort==="asc"?C.black:C.g88}`,...rad,background:briefSort==="asc"?C.black:C.card,color:briefSort==="asc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>SOONEST</button>
+            <button onClick={()=>setBriefSort("desc")} style={{padding:"6px 12px",border:`1px solid ${briefSort==="desc"?C.black:C.g88}`,...rad,background:briefSort==="desc"?C.black:C.card,color:briefSort==="desc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>LATEST</button>
+          </div>
         </div>
         <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
           <button onClick={()=>setBsFilter("all")} style={{padding:"6px 12px",border:`1px solid ${bsFilter==="all"?C.black:C.g88}`,...rad,background:bsFilter==="all"?C.black:C.card,color:bsFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
@@ -143,7 +161,7 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
       </div>
     </Card>
     {grouped.length===0&&<Card style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>No briefs match your filters.</div></Card>}
-    {grouped.map(grp=>(<div key={grp.channel}>
+    {grouped.map(grp=>{const isEmail=grp.channel==="Email";return(<div key={grp.channel}>
       <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8,padding:"0 4px"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:4,height:16,...rad,background:CHANNEL_COLORS[grp.channel]}}/><span style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>{grp.channel.toUpperCase()} ASSETS</span><span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{grp.briefs.length} brief{grp.briefs.length!==1?"s":""}</span></div>{!mob&&<span style={{fontSize:10,...bd,color:C.g70,fontFamily:ff,fontStyle:"italic"}}>Select a brief to update</span>}</div>
 
       {mob ? (
@@ -157,6 +175,10 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
               </div>
               {b.assignedTo&&<AvatarTooltip name={b.assignedTo}/>}
             </div>
+            {b.sendDate&&<div style={{display:"flex",gap:12,marginBottom:8}}>
+              <div style={{fontSize:10,...bd,color:C.g50,fontFamily:ff}}><span style={{...hd,fontSize:9,color:C.g70}}>SEND </span>{b.sendDate}</div>
+              {b.handoverDate&&<div style={{fontSize:10,...bd,color:C.g50,fontFamily:ff}}><span style={{...hd,fontSize:9,color:C.g70}}>H/O </span>{b.handoverDate}</div>}
+            </div>}
             <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
               <span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{b.locale}</span>
               <BriefStatusSelect value={b.status} onChange={v=>onUpdateStatus(project.id,b.id,b.channel,v)}/>
@@ -166,19 +188,20 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
       ) : (
         /* DESKTOP: Brief Table */
         <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden",marginBottom:8}}>
-          <div style={{display:"grid",gridTemplateColumns:"50px 1fr 100px 50px 180px",padding:"10px 20px",background:C.g94,borderBottom:`1px solid ${C.g88}`,gap:10}}>
-            <span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>ID</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRIEF NAME</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>OWNER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>STATUS</span>
+          <div style={{display:"grid",gridTemplateColumns:isEmail?"50px 1fr 100px 80px 80px 50px 180px":"50px 1fr 100px 50px 180px",padding:"10px 20px",background:C.g94,borderBottom:`1px solid ${C.g88}`,gap:10}}>
+            <span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>ID</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRIEF NAME</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE</span>{isEmail&&<><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>SEND</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>HANDOVER</span></>}<span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>OWNER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>STATUS</span>
           </div>
-          {grp.briefs.map((b,idx)=>(<div key={b.id+b.channel} style={{display:"grid",gridTemplateColumns:"50px 1fr 100px 50px 180px",padding:"14px 20px",borderBottom:idx<grp.briefs.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,borderLeft:`3px solid ${CHANNEL_COLORS[grp.channel]}`,cursor:"pointer",transition:"background 0.1s"}} onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
+          {grp.briefs.map((b,idx)=>(<div key={b.id+b.channel} style={{display:"grid",gridTemplateColumns:isEmail?"50px 1fr 100px 80px 80px 50px 180px":"50px 1fr 100px 50px 180px",padding:"14px 20px",borderBottom:idx<grp.briefs.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,borderLeft:`3px solid ${CHANNEL_COLORS[grp.channel]}`,cursor:"pointer",transition:"background 0.1s"}} onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
             <div style={{fontSize:12,fontWeight:600,color:C.g50,fontFamily:ff}}>{b.id}</div>
             <div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{b.name}</div>
             <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff}}>{b.locale}</div>
+            {isEmail&&<><div style={{fontSize:11,...bd,color:b.sendDate?C.black:C.g70,fontFamily:ff}}>{b.sendDate||"—"}</div><div style={{fontSize:11,...bd,color:b.handoverDate?C.black:C.g70,fontFamily:ff}}>{b.handoverDate||"—"}</div></>}
             <AvatarTooltip name={b.assignedTo}/>
             <BriefStatusSelect value={b.status} onChange={v=>onUpdateStatus(project.id,b.id,b.channel,v)}/>
           </div>))}
         </div>
       )}
-    </div>))}
+    </div>);})}
   </div>);
 }
 
