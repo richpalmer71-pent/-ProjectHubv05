@@ -10,10 +10,13 @@ const PAID_SIZE_GROUPS = {"PMAX / PPC":["1200x300","1200x628","1200x1200","960x1
 const EMAIL_TYPES = ["Launch","Product","Promo","Community"];
 const WEB_PLACEMENTS = ["Homepage","PLP","PDP","Other"];
 const BANNER_TYPES = ["Full Size Hero","Slim Banners","Secondary Banners","Other"];
-const defaultEmail=()=>({id:Date.now()+Math.random(),parentId:null,locale:"",name:"",purpose:"",subjectLine:"",preHeader:"",heroImage:"",heading:"",bodyCopy:"",cta:"",secondaryCta:"",notes:"",briefStatus:"brief_added"});
+const defaultEmailPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",subjectLine:"",preHeader:"",heroImage:"",heading:"",bodyCopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:""});
+const defaultEmailCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",sendDate:"",handoverDate:"",parts:[defaultEmailPart("UK (ENG)")],activeTab:0,collapsed:false});
 const defaultWebAsset=()=>({id:Date.now()+Math.random(),parentId:null,locale:"",name:"",heroImage:"",heading:"",subcopy:"",cta:"",secondaryCta:"",notes:"",briefStatus:"brief_added"});
 
 export default function App(){
+  const [copyState,setCopyState]=useState({});
+  const CopyBriefLink=({emailNum,locale})=>{const loc=locale?localeShort(locale):`P1`;const ref=`E${String(emailNum).padStart(2,"0")}-${loc}`;const url=`https://pentland-hub.vercel.app/brief/PEN-0000/${ref}`;const k=emailNum+"-"+loc;const copied=copyState[k];const doCopy=()=>{navigator.clipboard.writeText(url).then(()=>{setCopyState(s=>({...s,[k]:true}));setTimeout(()=>setCopyState(s=>({...s,[k]:false})),2000);}).catch(()=>{});};return(<button onClick={doCopy} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",border:`1px solid ${copied?C.green+"66":C.g88}`,...rad,background:copied?C.green+"18":C.card,color:copied?C.green:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>{copied?"COPIED!":"COPY BRIEF LINK"}</button>);};
   const [sec,setSec]=useState({channels:false,web:false,email:false,paid:false});
   const tog=k=>setSec(s=>({...s,[k]:!s[k]}));
   const [profiles,setProfiles]=useState(DEFAULT_PROFILES);
@@ -29,10 +32,17 @@ export default function App(){
   const addWA=()=>setWebAssets(a=>[...a,defaultWebAsset()]); const rmWA=id=>setWebAssets(a=>a.filter(w=>w.id!==id)); const upWA=(id,f,v)=>setWebAssets(a=>a.map(w=>w.id===id?{...w,[f]:v}:w));
   const dupWA=async(wa,loc)=>{const cid=Date.now()+Math.random();const clone={...wa,id:cid,parentId:wa.parentId||wa.id,locale:loc||""};const idx=webAssets.findIndex(w=>w.id===wa.id);const updated=[...webAssets];updated.splice(idx+1,0,clone);setWebAssets(updated);if(LANG[loc]){const t=await tx({name:wa.name,heading:wa.heading,subcopy:wa.subcopy,cta:wa.cta,secondaryCta:wa.secondaryCta,notes:wa.notes},loc);setWebAssets(a=>a.map(w=>w.id===cid?{...w,...t}:w));}};
   const webNum=(wa,idx)=>{if(!wa.parentId){let n=0;for(let i=0;i<=idx;i++){if(!webAssets[i].parentId)n++;}return String(n).padStart(2,"0");}const pIdx=webAssets.findIndex(w=>w.id===wa.parentId);let pNum=0;for(let i=0;i<=pIdx;i++){if(!webAssets[i].parentId)pNum++;}let sub=1;for(let i=pIdx+1;i<=idx;i++){if(webAssets[i].parentId===wa.parentId)sub++;}return String(pNum).padStart(2,"0")+"."+sub;};
-  const [et,setEt]=useState([]); const [emails,setEmails]=useState([defaultEmail()]); const [emailOwner,setEmailOwner]=useState("");
-  const addE=()=>setEmails(e=>[...e,defaultEmail()]); const rmE=id=>setEmails(e=>e.filter(em=>em.id!==id)); const upE=(id,f,v)=>setEmails(e=>e.map(em=>em.id===id?{...em,[f]:v}:em));
-  const dupE=async(em,loc)=>{const cid=Date.now()+Math.random();const clone={...em,id:cid,parentId:em.parentId||em.id,locale:loc||""};const idx=emails.findIndex(e=>e.id===em.id);const updated=[...emails];updated.splice(idx+1,0,clone);setEmails(updated);if(LANG[loc]){const t=await tx({name:em.name,subjectLine:em.subjectLine,preHeader:em.preHeader,heading:em.heading,bodyCopy:em.bodyCopy,cta:em.cta,secondaryCta:em.secondaryCta,notes:em.notes},loc);setEmails(a=>a.map(e=>e.id===cid?{...e,...t}:e));}};
-  const emailNum=(em,idx)=>{if(!em.parentId){let n=0;for(let i=0;i<=idx;i++){if(!emails[i].parentId)n++;}return String(n).padStart(2,"0");}const pIdx=emails.findIndex(e=>e.id===em.parentId);let pNum=0;for(let i=0;i<=pIdx;i++){if(!emails[i].parentId)pNum++;}let sub=1;for(let i=pIdx+1;i<=idx;i++){if(emails[i].parentId===em.parentId)sub++;}return String(pNum).padStart(2,"0")+"."+sub;};
+  const [et,setEt]=useState([]); const [emails,setEmails]=useState([defaultEmailCard(1)]); const [emailOwner,setEmailOwner]=useState(""); const [emailSort,setEmailSort]=useState("asc");
+  const addE=()=>setEmails(e=>[...e,defaultEmailCard(e.length+1)]);
+  const rmE=id=>setEmails(e=>{const f=e.filter(em=>em.id!==id);return f.map((em,i)=>({...em,num:i+1}));});
+  const upEmail=(id,field,val)=>setEmails(e=>e.map(em=>em.id===id?{...em,[field]:val}:em));
+  const upEmailPart=(emailId,partIdx,field,val)=>setEmails(e=>e.map(em=>{if(em.id!==emailId)return em;const np=em.parts.map((p,i)=>i===partIdx?{...p,[field]:val}:p);return{...em,parts:np};}));
+  const addEmailPart=async(emailId,locale)=>{setEmails(e=>e.map(em=>{if(em.id!==emailId)return em;const src=em.parts[em.activeTab]||em.parts[0];const np={...src,id:Date.now()+Math.random(),locale,briefStatus:"brief_added",figmaLink:""};return{...em,parts:[...em.parts,np],activeTab:em.parts.length,collapsed:false};}));if(LANG[locale]){const em=emails.find(x=>x.id===emailId);const src=em.parts[em.activeTab]||em.parts[0];const t=await tx({subjectLine:src.subjectLine,preHeader:src.preHeader,heading:src.heading,bodyCopy:src.bodyCopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;const np=em2.parts.map((p,i)=>i===em2.parts.length-1?{...p,...t}:p);return{...em2,parts:np};}));}};
+  const removeEmailPart=(emailId,partIdx)=>{setEmails(e=>e.map(em=>{if(em.id!==emailId||em.parts.length<=1)return em;const np=em.parts.filter((_,i)=>i!==partIdx);const na=em.activeTab>=np.length?np.length-1:em.activeTab>partIdx?em.activeTab-1:em.activeTab;return{...em,parts:np,activeTab:na};}));};
+  const dupEmail=(email)=>{const num=emails.length+1;const clone={...email,id:Date.now()+Math.random(),num,parts:email.parts.map(p=>({...p,id:Date.now()+Math.random()})),activeTab:0,collapsed:false};setEmails(e=>[...e,clone]);};
+  const sortedEmails=[...emails].sort((a,b)=>{const da=a.sendDate||"9999-12-31";const db=b.sendDate||"9999-12-31";return emailSort==="asc"?da.localeCompare(db):db.localeCompare(da);});
+  const localeShort=l=>{if(!l)return"";if(l.includes("UK"))return"UK";if(l.includes("US"))return"US";if(l.includes("CAN (FR)"))return"CAN-FR";if(l.includes("CAN"))return"CAN";if(l.includes("DE"))return"DE";if(l.includes("FR (FR)"))return"FR";return l;};
+  const [showLocalePicker,setShowLocalePicker]=useState(null);
   const [ps,setPs]=useState({}); const [os,setOs]=useState(""); const [phi,setPhi]=useState(""); const [pc,setPc]=useState(""); const [pv,setPv]=useState(""); const [paidOwner,setPaidOwner]=useState("");
   const tps=(gr,sz)=>setPs(p=>{const a=p[gr]||[];return{...p,[gr]:a.includes(sz)?a.filter(s=>s!==sz):[...a,sz]};});
   const [dl,setDl]=useState(""); const [cl,setCl]=useState(""); const [crl,setCrl]=useState(""); const [pl,setPl]=useState("");
@@ -266,19 +276,114 @@ export default function App(){
       {ch.includes("email")&&<Sec title="EMAIL ASSETS (CRM)" num={String(++si).padStart(2,"0")} collapsed={sec.email} onToggle={()=>tog("email")} accent={C.yellow}>
         <Field label="SECTION OWNER"><EmailSelect value={emailOwner} onChange={setEmailOwner} profiles={profiles} onAddUser={addUser}/></Field>
         <div style={{height:1,background:C.g88,margin:"20px 0"}}/>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><span style={{fontSize:13,...hd,color:C.black,fontFamily:ff}}>INDIVIDUAL EMAIL BRIEFS</span><button onClick={addE} style={{padding:"8px 18px",border:"none",...rad,background:C.black,color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>+ ADD EMAIL</button></div>
-        {emails.map((em,idx)=>(<Card key={em.id} style={{marginBottom:8,borderLeft:em.parentId?`3px solid ${C.yellow}`:`1px solid ${C.g88}`,padding:20}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>EMAIL {emailNum(em,idx)}{em.locale?` — ${em.locale}`:""}</span><BriefStatusSelect value={em.briefStatus||"brief_added"} onChange={v=>upE(em.id,"briefStatus",v)}/></div>{emails.length>1&&<button onClick={()=>rmE(em.id)} style={{padding:"4px 12px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>REMOVE</button>}</div>
-          <div style={{marginBottom:12}}><Field label="EMAIL TYPE"><CG options={EMAIL_TYPES} selected={et} onChange={setEt}/></Field></div>
-          <div style={{marginBottom:12}}><Field label="LOCALE / LANGUAGE"><CG options={LOCALES} selected={em.locale?[em.locale]:[]} onChange={v=>upE(em.id,"locale",v.length?v[v.length-1]:"")}/></Field></div>
-          <div className="hub-grid-2" style={g(2)}><Field label="EMAIL NAME"><Input value={em.name} onChange={v=>upE(em.id,"name",v)} placeholder="e.g. Launch Email"/></Field><Field label="HERO IMAGE (LINK)"><Input value={em.heroImage} onChange={v=>upE(em.id,"heroImage",v)} placeholder="https://..."/></Field></div>
-          <div style={{marginTop:12}}><Field label="MAIN HEADING"><Input value={em.heading} onChange={v=>upE(em.id,"heading",v)} placeholder="Main headline"/></Field></div>
-          <div className="hub-grid-2" style={{...g(2),marginTop:12}}><Field label="SUBJECT LINE"><Input value={em.subjectLine} onChange={v=>upE(em.id,"subjectLine",v)} placeholder="Subject line"/></Field><Field label="PRE-HEADER"><Input value={em.preHeader} onChange={v=>upE(em.id,"preHeader",v)} placeholder="Pre-header text"/></Field></div>
-          <div style={{marginTop:12}}><Field label="BODY COPY"><TextArea value={em.bodyCopy} onChange={v=>upE(em.id,"bodyCopy",v)} placeholder="Body copy..." rows={3}/></Field></div>
-          <div className="hub-grid-2" style={{...g(2),marginTop:12}}><Field label="CTA"><Input value={em.cta} onChange={v=>upE(em.id,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={em.secondaryCta} onChange={v=>upE(em.id,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>
-          <div style={{marginTop:12}}><Field label="ADDITIONAL NOTES"><TextArea value={em.notes} onChange={v=>upE(em.id,"notes",v)} placeholder="Any additional notes..." rows={2}/></Field></div>
-          <div style={{marginTop:16,display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,...hd,color:C.g50,fontFamily:ff}}>DUPLICATE FOR:</span><select onChange={e=>{if(e.target.value){dupE(em,e.target.value);e.target.value="";}}} style={{...bi,width:"auto",fontSize:11,cursor:"pointer"}}><option value="">Select locale...</option>{LOCALES.map(l=><option key={l} value={l}>{l}{LANG[l]?" (auto-translate)":""}</option>)}</select></div>
-        </Card>))}
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16,flexWrap:"wrap",gap:8}}>
+          <div style={{display:"flex",alignItems:"center",gap:8}}>
+            <span style={{fontSize:13,...hd,color:C.black,fontFamily:ff}}>INDIVIDUAL EMAIL BRIEFS</span>
+            <button onClick={addE} style={{padding:"8px 18px",border:"none",...rad,background:C.black,color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>+ ADD EMAIL</button>
+          </div>
+          <div style={{display:"flex",alignItems:"center",gap:6}}>
+            <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>SEND DATE:</span>
+            <button onClick={()=>setEmailSort("asc")} style={{padding:"6px 12px",border:`1px solid ${emailSort==="asc"?C.black:C.g88}`,...rad,background:emailSort==="asc"?C.black:C.card,color:emailSort==="asc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>SOONEST</button>
+            <button onClick={()=>setEmailSort("desc")} style={{padding:"6px 12px",border:`1px solid ${emailSort==="desc"?C.black:C.g88}`,...rad,background:emailSort==="desc"?C.black:C.card,color:emailSort==="desc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>LATEST</button>
+          </div>
+        </div>
+        {sortedEmails.map(em=>{const numStr=String(em.num).padStart(2,"0");const titleDisplay=`${numStr}${em.name?` — ${em.name}`:""}`;const ap=em.parts[em.activeTab]||em.parts[0];const tabIdx=em.activeTab;const completeParts=em.parts.filter(p=>p.briefStatus==="complete").length;const dateRange=(em.sendDate||em.handoverDate)?`${em.sendDate||"—"} → ${em.handoverDate||"—"}`:"No dates set";return(<div key={em.id} style={{marginBottom:12}}>
+          <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden"}}>
+            {/* Collapsed Header */}
+            <div onClick={()=>upEmail(em.id,"collapsed",!em.collapsed)} style={{padding:"16px 22px",background:"#D8DBE0",cursor:"pointer",userSelect:"none"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,flex:1,minWidth:0}}>
+                  <div style={{width:4,height:28,...rad,background:C.yellow,flexShrink:0}}/>
+                  <span style={{fontSize:15,...hd,color:C.black,fontFamily:ff,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{titleDisplay||numStr}</span>
+                  {em.parts.length>1&&<span style={{padding:"2px 8px",...rad,background:C.yellow+"33",color:"#92400e",fontSize:9,...hd,fontFamily:ff,flexShrink:0}}>{em.parts.length} PARTS</span>}
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+                  <span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{dateRange}</span>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>{em.parts.map((p,i)=>{const s=BRIEF_STATUSES.find(x=>x.key===p.briefStatus);return<div key={i} style={{width:8,height:8,borderRadius:4,background:s?.color||C.g70}}/>;})}</div>
+                  <span style={{fontSize:10,...bd,color:C.g50,fontFamily:ff}}>{completeParts}/{em.parts.length}</span>
+                  <span style={{fontSize:16,color:C.g50,transform:em.collapsed?"rotate(0)":"rotate(180deg)",transition:"transform 0.2s",display:"inline-block"}}>▾</span>
+                </div>
+              </div>
+            </div>
+            {!em.collapsed&&<>
+              {/* Name + Dates */}
+              <div style={{padding:"14px 22px",borderBottom:`1px solid ${C.g88}`,background:C.panel}}>
+                <div style={{display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
+                  <div style={{flex:1,minWidth:180}}>
+                    <label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>EMAIL NAME</label>
+                    <Input value={em.name} onChange={v=>upEmail(em.id,"name",v)} placeholder="e.g. Launch Email"/>
+                  </div>
+                  <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>SEND DATE</label><input type="date" value={em.sendDate} onChange={e=>upEmail(em.id,"sendDate",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:140}}/></div>
+                  <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>HANDOVER DATE</label><input type="date" value={em.handoverDate} onChange={e=>upEmail(em.id,"handoverDate",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:140}}/></div>
+                </div>
+              </div>
+              {/* Tabs */}
+              <div style={{display:"flex",alignItems:"center",borderBottom:`1px solid ${C.g88}`,background:C.g94,overflowX:"auto"}}>
+                {em.parts.map((p,i)=>{const isActive=i===tabIdx;const isFirst=i===0;const loc=p.locale?localeShort(p.locale):`Part ${i+1}`;const tabText=isFirst?`${titleDisplay} (${loc})`:`${numStr} ${p.locale||`Part ${i+1}`}`;return(<div key={p.id} style={{display:"flex",alignItems:"center"}}>
+                  <button onClick={()=>upEmail(em.id,"activeTab",i)} style={{padding:"12px 16px",border:"none",borderBottom:isActive?`3px solid ${C.yellow}`:"3px solid transparent",background:isActive?C.card:"transparent",cursor:"pointer",fontFamily:ff,fontSize:11,fontWeight:isActive?600:400,color:isActive?C.black:C.g50,whiteSpace:"nowrap",transition:"all 0.15s"}}>{tabText}</button>
+                  {em.parts.length>1&&<button onClick={e=>{e.stopPropagation();removeEmailPart(em.id,i);}} style={{padding:"2px 6px",border:"none",background:"transparent",cursor:"pointer",color:C.g70,fontSize:14,lineHeight:1,marginRight:2}}>×</button>}
+                </div>);})}
+                <button onClick={()=>setShowLocalePicker(em.id)} style={{padding:"10px 14px",border:"none",background:"transparent",cursor:"pointer",fontFamily:ff,fontSize:11,...hd,color:C.blue,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>ADD PART
+                </button>
+              </div>
+              {/* Active Part */}
+              <div style={{padding:"22px 22px 18px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+                  <BriefStatusSelect value={ap.briefStatus} onChange={v=>upEmailPart(em.id,tabIdx,"briefStatus",v)}/>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE:</label><select value={ap.locale} onChange={e=>upEmailPart(em.id,tabIdx,"locale",e.target.value)} style={{...bi,width:"auto",fontSize:12,padding:"8px 12px",cursor:"pointer"}}><option value="">Select...</option>{LOCALES.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
+                </div>
+                {/* Figma + Brief Links */}
+                <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap",alignItems:"center"}}>
+                  {ap.figmaLink&&!ap._editingFigma?(<div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <a href={ap.figmaLink} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",border:"1px solid #A259FF44",...rad,background:"#A259FF18",color:"#A259FF",fontSize:10,...hd,fontFamily:ff,textDecoration:"none"}}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="0"><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z" fill="#F24E1E"/><path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z" fill="#FF7262"/><path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z" fill="#1ABCFE"/><path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z" fill="#0ACF83"/><path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z" fill="#A259FF"/></svg>FIGMA LINK</a>
+                    <button onClick={()=>upEmailPart(em.id,tabIdx,"_editingFigma",true)} style={{padding:"6px 8px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  </div>):(<div style={{display:"flex",alignItems:"center",gap:8,background:C.g94,...rad,padding:"8px 12px",flex:1,maxWidth:300}}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="0"><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z" fill="#F24E1E"/><path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z" fill="#FF7262"/><path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z" fill="#1ABCFE"/><path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z" fill="#0ACF83"/><path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z" fill="#A259FF"/></svg>
+                    <input value={ap.figmaLink||""} onChange={e=>upEmailPart(em.id,tabIdx,"figmaLink",e.target.value)} onBlur={()=>{if(ap.figmaLink)upEmailPart(em.id,tabIdx,"_editingFigma",false);}} placeholder="Paste Figma URL..." style={{flex:1,border:"none",background:"transparent",fontSize:12,fontFamily:ff,color:C.black,outline:"none",padding:0,...bd}}/>
+                  </div>)}
+                  <CopyBriefLink emailNum={em.num} locale={ap.locale}/>
+                </div>
+                {/* Form */}
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  <div className="hub-grid-2" style={g(2)}><Field label="SUBJECT LINE"><Input value={ap.subjectLine} onChange={v=>upEmailPart(em.id,tabIdx,"subjectLine",v)} placeholder="Subject line"/></Field><Field label="PRE-HEADER"><Input value={ap.preHeader} onChange={v=>upEmailPart(em.id,tabIdx,"preHeader",v)} placeholder="Preview text"/></Field></div>
+                  <Field label="HERO IMAGE (LINK)"><Input value={ap.heroImage} onChange={v=>upEmailPart(em.id,tabIdx,"heroImage",v)} placeholder="https://..."/></Field>
+                  <Field label="MAIN HEADING"><Input value={ap.heading} onChange={v=>upEmailPart(em.id,tabIdx,"heading",v)} placeholder="Main headline"/></Field>
+                  <Field label="BODY COPY"><TextArea value={ap.bodyCopy} onChange={v=>upEmailPart(em.id,tabIdx,"bodyCopy",v)} placeholder="Body copy..." rows={3}/></Field>
+                  <div className="hub-grid-2" style={g(2)}><Field label="PRIMARY CTA"><Input value={ap.cta} onChange={v=>upEmailPart(em.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={ap.secondaryCta} onChange={v=>upEmailPart(em.id,tabIdx,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>
+                  <Field label="NOTES"><TextArea value={ap.notes} onChange={v=>upEmailPart(em.id,tabIdx,"notes",v)} placeholder="Additional notes..." rows={2}/></Field>
+                </div>
+              </div>
+              {/* Footer */}
+              <div style={{padding:"14px 22px",borderTop:`1px solid ${C.g88}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:C.g94}}>
+                {emails.length>1?<button onClick={()=>rmE(em.id)} style={{padding:"8px 14px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>REMOVE EMAIL</button>:<div/>}
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>{em.parts.map((p,i)=>{const s=BRIEF_STATUSES.find(x=>x.key===p.briefStatus);return<div key={i} style={{width:8,height:8,borderRadius:4,background:s?.color||C.g70}} title={`${p.locale||`Part ${i+1}`}: ${s?.label}`}/>;})}</div>
+                  <span style={{fontSize:10,...bd,color:C.g70,fontFamily:ff}}>{completeParts}/{em.parts.length} complete</span>
+                </div>
+              </div>
+            </>}
+          </div>
+          {!em.collapsed&&<div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}><button onClick={()=>dupEmail(em)} style={{padding:"8px 16px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,fontSize:10,...hd,color:C.g50,display:"flex",alignItems:"center",gap:6}}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>DUPLICATE EMAIL
+          </button></div>}
+        </div>);})}
+        {/* Locale Picker Modal */}
+        {showLocalePicker&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowLocalePicker(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:C.card,...rad,padding:"28px",maxWidth:360,width:"90%",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
+            <div style={{fontSize:14,...hd,color:C.black,fontFamily:ff,marginBottom:6}}>ADD TRANSLATED PART</div>
+            <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff,marginBottom:18,lineHeight:1.5}}>Select a locale. All fields will be copied and translated.</div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {LOCALES.filter(l=>!(emails.find(x=>x.id===showLocalePicker)?.parts||[]).map(p=>p.locale).includes(l)).map(l=>(
+                <button key={l} onClick={()=>{addEmailPart(showLocalePicker,l);setShowLocalePicker(null);}} style={{padding:"12px 16px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,fontSize:13,fontWeight:500,color:C.black,textAlign:"left",display:"flex",alignItems:"center",justifyContent:"space-between"}} onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background=C.card}>
+                  <span>{l}</span>{LANG[l]?<span style={{fontSize:10,...hd,color:C.blue,fontFamily:ff}}>AUTO-TRANSLATE</span>:<span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>COPY ONLY</span>}
+                </button>
+              ))}
+            </div>
+            <button onClick={()=>setShowLocalePicker(null)} style={{width:"100%",marginTop:14,padding:"10px",border:`1px solid ${C.g88}`,...rad,background:C.g94,cursor:"pointer",fontFamily:ff,fontSize:11,...hd,color:C.g50}}>CANCEL</button>
+          </div>
+        </div>}
       </Sec>}
 
       {ch.includes("paid")&&<Sec title="PAID MEDIA ASSETS" num={String(++si).padStart(2,"0")} collapsed={sec.paid} onToggle={()=>tog("paid")} accent={C.blue}>
