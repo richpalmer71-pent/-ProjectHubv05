@@ -10,9 +10,10 @@ const PAID_SIZE_GROUPS = {"PMAX / PPC":["1200x300","1200x628","1200x1200","960x1
 const EMAIL_TYPES = ["Launch","Product","Promo","Community"];
 const WEB_PLACEMENTS = ["Homepage","PLP","PDP","Other"];
 const BANNER_TYPES = ["Full Size Hero","Slim Banners","Secondary Banners","Other"];
+const defaultWebPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",name:"",heroImage:"",heading:"",subcopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:""});
+const defaultWebCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",parts:[defaultWebPart("UK (ENG)")],activeTab:0,collapsed:false});
 const defaultEmailPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",subjectLine:"",preHeader:"",heroImage:"",heading:"",bodyCopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:""});
 const defaultEmailCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",sendDate:"",handoverDate:"",parts:[defaultEmailPart("UK (ENG)")],activeTab:0,collapsed:false});
-const defaultWebAsset=()=>({id:Date.now()+Math.random(),parentId:null,locale:"",name:"",heroImage:"",heading:"",subcopy:"",cta:"",secondaryCta:"",notes:"",briefStatus:"brief_added"});
 
 export default function App(){
   const [copyState,setCopyState]=useState({});
@@ -28,20 +29,27 @@ export default function App(){
   const [objective,setObj]=useState(""); const [locales,setLoc]=useState([]); const [sd,setSd]=useState(""); const [ed,setEd]=useState(""); const [hd2,setHd2]=useState("");
   const [tkTitle,setTkTitle]=useState(""); const [damLink,setDam]=useState(""); const [abLink,setAb]=useState(""); const [dFiles,setDf]=useState(""); const [cpTk,setCpTk]=useState(""); const [bGuid,setBg]=useState("");
   const [ch,setCh]=useState([]);
-  const [wp,setWp]=useState([]); const [wbt,setWbt]=useState([]); const [webAssets,setWebAssets]=useState([defaultWebAsset()]); const [webOwner,setWebOwner]=useState("");
-  const addWA=()=>setWebAssets(a=>[...a,defaultWebAsset()]); const rmWA=id=>setWebAssets(a=>a.filter(w=>w.id!==id)); const upWA=(id,f,v)=>setWebAssets(a=>a.map(w=>w.id===id?{...w,[f]:v}:w));
-  const dupWA=async(wa,loc)=>{const cid=Date.now()+Math.random();const clone={...wa,id:cid,parentId:wa.parentId||wa.id,locale:loc||""};const idx=webAssets.findIndex(w=>w.id===wa.id);const updated=[...webAssets];updated.splice(idx+1,0,clone);setWebAssets(updated);if(LANG[loc]){const t=await tx({name:wa.name,heading:wa.heading,subcopy:wa.subcopy,cta:wa.cta,secondaryCta:wa.secondaryCta,notes:wa.notes},loc);setWebAssets(a=>a.map(w=>w.id===cid?{...w,...t}:w));}};
-  const webNum=(wa,idx)=>{if(!wa.parentId){let n=0;for(let i=0;i<=idx;i++){if(!webAssets[i].parentId)n++;}return String(n).padStart(2,"0");}const pIdx=webAssets.findIndex(w=>w.id===wa.parentId);let pNum=0;for(let i=0;i<=pIdx;i++){if(!webAssets[i].parentId)pNum++;}let sub=1;for(let i=pIdx+1;i<=idx;i++){if(webAssets[i].parentId===wa.parentId)sub++;}return String(pNum).padStart(2,"0")+"."+sub;};
+  const [wp,setWp]=useState([]); const [wbt,setWbt]=useState([]); const [webAssets,setWebAssets]=useState([defaultWebCard(1)]); const [webOwner,setWebOwner]=useState("");
+  const addWA=()=>setWebAssets(a=>[...a,defaultWebCard(a.length+1)]);
+  const rmWA=id=>setWebAssets(a=>{const f=a.filter(w=>w.id!==id);return f.map((w,i)=>({...w,num:i+1}));});
+  const upWeb=(id,field,val)=>setWebAssets(a=>a.map(w=>w.id===id?{...w,[field]:val}:w));
+  const upWebPart=(webId,partIdx,field,val)=>setWebAssets(a=>a.map(w=>{if(w.id!==webId)return w;const np=w.parts.map((p,i)=>i===partIdx?{...p,[field]:val}:p);return{...w,parts:np};}));
+  const addWebPart=async(webId,locale)=>{const newPartId=Date.now()+Math.random();const w=webAssets.find(x=>x.id===webId);if(!w)return;const src=w.parts[w.activeTab]||w.parts[0];const np={...src,id:newPartId,locale,briefStatus:"brief_added",figmaLink:""};setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;return{...w2,parts:[...w2.parts,np],activeTab:w2.parts.length,collapsed:false};}));if(LANG[locale]){const t=await tx({name:src.name,heading:src.heading,subcopy:src.subcopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;const updatedParts=w2.parts.map(p=>p.id===newPartId?{...p,...t}:p);return{...w2,parts:updatedParts};}));}};
+  const removeWebPart=(webId,partIdx)=>{setWebAssets(a=>a.map(w=>{if(w.id!==webId||w.parts.length<=1)return w;const np=w.parts.filter((_,i)=>i!==partIdx);const na=w.activeTab>=np.length?np.length-1:w.activeTab>partIdx?w.activeTab-1:w.activeTab;return{...w,parts:np,activeTab:na};}));};
+  const dupWeb=(web)=>{const num=webAssets.length+1;const clone={...web,id:Date.now()+Math.random(),num,parts:web.parts.map(p=>({...p,id:Date.now()+Math.random()})),activeTab:0,collapsed:false};setWebAssets(a=>[...a,clone]);};
+  const changeWebPartLocale=async(webId,partIdx,newLocale)=>{const w=webAssets.find(x=>x.id===webId);if(!w)return;const part=w.parts[partIdx];const partId=part.id;upWebPart(webId,partIdx,"locale",newLocale);if(LANG[newLocale]){const t=await tx({name:part.name,heading:part.heading,subcopy:part.subcopy,cta:part.cta,secondaryCta:part.secondaryCta,notes:part.notes},newLocale);setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;const updatedParts=w2.parts.map(p=>p.id===partId?{...p,...t}:p);return{...w2,parts:updatedParts};}));}};
+  const [showWebLocalePicker,setShowWebLocalePicker]=useState(null);
   const [et,setEt]=useState([]); const [emails,setEmails]=useState([defaultEmailCard(1)]); const [emailOwner,setEmailOwner]=useState(""); const [emailSort,setEmailSort]=useState("asc");
   const addE=()=>setEmails(e=>[...e,defaultEmailCard(e.length+1)]);
   const rmE=id=>setEmails(e=>{const f=e.filter(em=>em.id!==id);return f.map((em,i)=>({...em,num:i+1}));});
   const upEmail=(id,field,val)=>setEmails(e=>e.map(em=>em.id===id?{...em,[field]:val}:em));
   const upEmailPart=(emailId,partIdx,field,val)=>setEmails(e=>e.map(em=>{if(em.id!==emailId)return em;const np=em.parts.map((p,i)=>i===partIdx?{...p,[field]:val}:p);return{...em,parts:np};}));
-  const addEmailPart=async(emailId,locale)=>{setEmails(e=>e.map(em=>{if(em.id!==emailId)return em;const src=em.parts[em.activeTab]||em.parts[0];const np={...src,id:Date.now()+Math.random(),locale,briefStatus:"brief_added",figmaLink:""};return{...em,parts:[...em.parts,np],activeTab:em.parts.length,collapsed:false};}));if(LANG[locale]){const em=emails.find(x=>x.id===emailId);const src=em.parts[em.activeTab]||em.parts[0];const t=await tx({subjectLine:src.subjectLine,preHeader:src.preHeader,heading:src.heading,bodyCopy:src.bodyCopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;const np=em2.parts.map((p,i)=>i===em2.parts.length-1?{...p,...t}:p);return{...em2,parts:np};}));}};
+  const addEmailPart=async(emailId,locale)=>{const newPartId=Date.now()+Math.random();const em=emails.find(x=>x.id===emailId);if(!em)return;const src=em.parts[em.activeTab]||em.parts[0];const np={...src,id:newPartId,locale,briefStatus:"brief_added",figmaLink:""};setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;return{...em2,parts:[...em2.parts,np],activeTab:em2.parts.length,collapsed:false};}));if(LANG[locale]){const t=await tx({subjectLine:src.subjectLine,preHeader:src.preHeader,heading:src.heading,bodyCopy:src.bodyCopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;const updatedParts=em2.parts.map(p=>p.id===newPartId?{...p,...t}:p);return{...em2,parts:updatedParts};}));}};
   const removeEmailPart=(emailId,partIdx)=>{setEmails(e=>e.map(em=>{if(em.id!==emailId||em.parts.length<=1)return em;const np=em.parts.filter((_,i)=>i!==partIdx);const na=em.activeTab>=np.length?np.length-1:em.activeTab>partIdx?em.activeTab-1:em.activeTab;return{...em,parts:np,activeTab:na};}));};
   const dupEmail=(email)=>{const num=emails.length+1;const clone={...email,id:Date.now()+Math.random(),num,parts:email.parts.map(p=>({...p,id:Date.now()+Math.random()})),activeTab:0,collapsed:false};setEmails(e=>[...e,clone]);};
   const sortedEmails=[...emails].sort((a,b)=>{const da=a.sendDate||"9999-12-31";const db=b.sendDate||"9999-12-31";return emailSort==="asc"?da.localeCompare(db):db.localeCompare(da);});
   const localeShort=l=>{if(!l)return"";if(l.includes("UK"))return"UK";if(l.includes("US"))return"US";if(l.includes("CAN (FR)"))return"CAN-FR";if(l.includes("CAN"))return"CAN";if(l.includes("DE"))return"DE";if(l.includes("FR (FR)"))return"FR";return l;};
+  const changePartLocale=async(emailId,partIdx,newLocale)=>{const em=emails.find(x=>x.id===emailId);if(!em)return;const part=em.parts[partIdx];const partId=part.id;upEmailPart(emailId,partIdx,"locale",newLocale);if(LANG[newLocale]){const t=await tx({subjectLine:part.subjectLine,preHeader:part.preHeader,heading:part.heading,bodyCopy:part.bodyCopy,cta:part.cta,secondaryCta:part.secondaryCta,notes:part.notes},newLocale);setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;const updatedParts=em2.parts.map(p=>p.id===partId?{...p,...t}:p);return{...em2,parts:updatedParts};}));}};
   const [showLocalePicker,setShowLocalePicker]=useState(null);
   const [ps,setPs]=useState({}); const [os,setOs]=useState(""); const [phi,setPhi]=useState(""); const [pc,setPc]=useState(""); const [pv,setPv]=useState(""); const [paidOwner,setPaidOwner]=useState("");
   const tps=(gr,sz)=>setPs(p=>{const a=p[gr]||[];return{...p,[gr]:a.includes(sz)?a.filter(s=>s!==sz):[...a,sz]};});
@@ -261,16 +269,99 @@ export default function App(){
         <Field label="SECTION OWNER"><EmailSelect value={webOwner} onChange={setWebOwner} profiles={profiles} onAddUser={addUser}/></Field>
         <div style={{height:1,background:C.g88,margin:"20px 0"}}/>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><span style={{fontSize:13,...hd,color:C.black,fontFamily:ff}}>INDIVIDUAL WEB ASSET BRIEFS</span><button onClick={addWA} style={{padding:"8px 18px",border:"none",...rad,background:C.black,color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>+ ADD WEB ASSET</button></div>
-        {webAssets.map((wa,idx)=>(<Card key={wa.id} style={{marginBottom:8,borderLeft:wa.parentId?`3px solid ${C.red}`:`1px solid ${C.g88}`,padding:20}}>
-          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}><div style={{display:"flex",alignItems:"center",gap:10}}><span style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>WEB ASSET {webNum(wa,idx)}{wa.locale?` — ${wa.locale}`:""}</span><BriefStatusSelect value={wa.briefStatus||"brief_added"} onChange={v=>upWA(wa.id,"briefStatus",v)}/></div>{webAssets.length>1&&<button onClick={()=>rmWA(wa.id)} style={{padding:"4px 12px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>REMOVE</button>}</div>
-          <div style={{marginBottom:12}}><Field label="LOCALE / LANGUAGE"><CG options={LOCALES} selected={wa.locale?[wa.locale]:[]} onChange={v=>upWA(wa.id,"locale",v.length?v[v.length-1]:"")}/></Field></div>
-          <div className="hub-grid-2" style={g(2)}><Field label="KEY PLACEMENTS"><CG options={WEB_PLACEMENTS} selected={wp} onChange={setWp}/></Field><Field label="BANNER SIZES"><CG options={BANNER_TYPES} selected={wbt} onChange={setWbt}/></Field></div>
-          <div className="hub-grid-2" style={{...g(2),marginTop:12}}><Field label="ASSET NAME"><Input value={wa.name} onChange={v=>upWA(wa.id,"name",v)} placeholder="e.g. Hero Banner"/></Field><Field label="HERO IMAGE (LINK)"><Input value={wa.heroImage} onChange={v=>upWA(wa.id,"heroImage",v)} placeholder="https://..."/></Field></div>
-          <div className="hub-grid-2" style={{...g(2),marginTop:12}}><Field label="MAIN HEADING"><Input value={wa.heading} onChange={v=>upWA(wa.id,"heading",v)} placeholder="Main headline"/></Field><Field label="SUBCOPY"><Input value={wa.subcopy} onChange={v=>upWA(wa.id,"subcopy",v)} placeholder="Supporting copy"/></Field></div>
-          <div className="hub-grid-2" style={{...g(2),marginTop:12}}><Field label="CTA"><Input value={wa.cta} onChange={v=>upWA(wa.id,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={wa.secondaryCta} onChange={v=>upWA(wa.id,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>
-          <div style={{marginTop:12}}><Field label="ADDITIONAL NOTES"><TextArea value={wa.notes} onChange={v=>upWA(wa.id,"notes",v)} placeholder="Any additional notes..." rows={2}/></Field></div>
-          <div style={{marginTop:16,display:"flex",gap:8,alignItems:"center"}}><span style={{fontSize:11,...hd,color:C.g50,fontFamily:ff}}>DUPLICATE FOR:</span><select onChange={e=>{if(e.target.value){dupWA(wa,e.target.value);e.target.value="";}}} style={{...bi,width:"auto",fontSize:11,cursor:"pointer"}}><option value="">Select locale...</option>{LOCALES.map(l=><option key={l} value={l}>{l}{LANG[l]?" (auto-translate)":""}</option>)}</select></div>
-        </Card>))}
+        {webAssets.map(wa=>{const numStr=String(wa.num).padStart(2,"0");const titleDisplay=`${numStr}${wa.name?` — ${wa.name}`:""}`;const ap=wa.parts[wa.activeTab]||wa.parts[0];const tabIdx=wa.activeTab;const completeParts=wa.parts.filter(p=>p.briefStatus==="complete").length;return(<div key={wa.id} style={{marginBottom:12}}>
+          <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden"}}>
+            {/* Header */}
+            <div onClick={()=>upWeb(wa.id,"collapsed",!wa.collapsed)} style={{padding:"16px 22px",background:"#D8DBE0",cursor:"pointer",userSelect:"none"}}>
+              <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12}}>
+                <div style={{display:"flex",alignItems:"center",gap:12,flex:1,minWidth:0}}>
+                  <div style={{width:4,height:28,...rad,background:C.red,flexShrink:0}}/>
+                  <span style={{fontSize:15,...hd,color:C.black,fontFamily:ff,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{titleDisplay||numStr}</span>
+                  {wa.parts.length>1&&<span style={{padding:"2px 8px",...rad,background:C.red+"22",color:C.red,fontSize:9,...hd,fontFamily:ff,flexShrink:0}}>{wa.parts.length} VARIANTS</span>}
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>{wa.parts.map((p,i)=>{const s=BRIEF_STATUSES.find(x=>x.key===p.briefStatus);return<div key={i} style={{width:8,height:8,borderRadius:4,background:s?.color||C.g70}}/>;})}</div>
+                  <span style={{fontSize:10,...bd,color:C.g50,fontFamily:ff}}>{completeParts}/{wa.parts.length}</span>
+                  <span style={{fontSize:16,color:C.g50,transform:wa.collapsed?"rotate(0)":"rotate(180deg)",transition:"transform 0.2s",display:"inline-block"}}>▾</span>
+                </div>
+              </div>
+            </div>
+            {!wa.collapsed&&<>
+              {/* Name row */}
+              <div style={{padding:"14px 22px",borderBottom:`1px solid ${C.g88}`,background:C.panel}}>
+                <div style={{display:"flex",alignItems:"flex-end",gap:12,flexWrap:"wrap"}}>
+                  <div style={{flex:1,minWidth:180}}>
+                    <label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>ASSET NAME</label>
+                    <Input value={wa.name} onChange={v=>upWeb(wa.id,"name",v)} placeholder="e.g. Homepage Hero Banner"/>
+                  </div>
+                </div>
+              </div>
+              {/* Tabs */}
+              <div style={{display:"flex",alignItems:"center",borderBottom:`1px solid ${C.g88}`,background:C.g94,overflowX:"auto"}}>
+                {wa.parts.map((p,i)=>{const isActive=i===tabIdx;const isFirst=i===0;const loc=p.locale?localeShort(p.locale):`Part ${i+1}`;const tabText=isFirst?`${titleDisplay} (${loc})`:`${numStr} ${p.locale||`Part ${i+1}`}`;return(<div key={p.id} style={{display:"flex",alignItems:"center"}}>
+                  <button onClick={()=>upWeb(wa.id,"activeTab",i)} style={{padding:"12px 16px",border:"none",borderBottom:isActive?`3px solid ${C.red}`:"3px solid transparent",background:isActive?C.card:"transparent",cursor:"pointer",fontFamily:ff,fontSize:11,fontWeight:isActive?600:400,color:isActive?C.black:C.g50,whiteSpace:"nowrap",transition:"all 0.15s"}}>{tabText}</button>
+                  {wa.parts.length>1&&<button onClick={e=>{e.stopPropagation();removeWebPart(wa.id,i);}} style={{padding:"2px 6px",border:"none",background:"transparent",cursor:"pointer",color:C.g70,fontSize:14,lineHeight:1,marginRight:2}}>×</button>}
+                </div>);})}
+                <button onClick={()=>setShowWebLocalePicker(wa.id)} style={{padding:"10px 14px",border:"none",background:"transparent",cursor:"pointer",fontFamily:ff,fontSize:11,...hd,color:C.blue,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>VARIANT
+                </button>
+              </div>
+              {/* Active Part */}
+              <div style={{padding:"22px 22px 18px"}}>
+                <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+                  <BriefStatusSelect value={ap.briefStatus} onChange={v=>upWebPart(wa.id,tabIdx,"briefStatus",v)}/>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE:</label><select value={ap.locale} onChange={e=>changeWebPartLocale(wa.id,tabIdx,e.target.value)} style={{...bi,width:"auto",fontSize:12,padding:"8px 12px",cursor:"pointer"}}><option value="">Select...</option>{LOCALES.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
+                </div>
+                {/* Figma + Brief Links */}
+                <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap",alignItems:"center"}}>
+                  {ap.figmaLink&&!ap._editingFigma?(<div style={{display:"flex",alignItems:"center",gap:6}}>
+                    <a href={ap.figmaLink} target="_blank" rel="noopener noreferrer" style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",border:"1px solid #A259FF44",...rad,background:"#A259FF18",color:"#A259FF",fontSize:10,...hd,fontFamily:ff,textDecoration:"none"}}>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" strokeWidth="0"><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z" fill="#F24E1E"/><path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z" fill="#FF7262"/><path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z" fill="#1ABCFE"/><path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z" fill="#0ACF83"/><path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z" fill="#A259FF"/></svg>FIGMA LINK</a>
+                    <button onClick={()=>upWebPart(wa.id,tabIdx,"_editingFigma",true)} style={{padding:"6px 8px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+                  </div>):(<div style={{display:"flex",alignItems:"center",gap:8,background:C.g94,...rad,padding:"8px 12px",flex:1,maxWidth:300}}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" strokeWidth="0"><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z" fill="#F24E1E"/><path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z" fill="#FF7262"/><path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z" fill="#1ABCFE"/><path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z" fill="#0ACF83"/><path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z" fill="#A259FF"/></svg>
+                    <input value={ap.figmaLink||""} onChange={e=>upWebPart(wa.id,tabIdx,"figmaLink",e.target.value)} onBlur={()=>{if(ap.figmaLink)upWebPart(wa.id,tabIdx,"_editingFigma",false);}} placeholder="Paste Figma URL..." style={{flex:1,border:"none",background:"transparent",fontSize:12,fontFamily:ff,color:C.black,outline:"none",padding:0,...bd}}/>
+                  </div>)}
+                  <CopyBriefLink emailNum={wa.num} locale={ap.locale}/>
+                </div>
+                {/* Form */}
+                <div style={{display:"flex",flexDirection:"column",gap:12}}>
+                  <div className="hub-grid-2" style={g(2)}><Field label="KEY PLACEMENTS"><CG options={WEB_PLACEMENTS} selected={wp} onChange={setWp}/></Field><Field label="BANNER SIZES"><CG options={BANNER_TYPES} selected={wbt} onChange={setWbt}/></Field></div>
+                  <div className="hub-grid-2" style={g(2)}><Field label="ASSET NAME"><Input value={ap.name} onChange={v=>upWebPart(wa.id,tabIdx,"name",v)} placeholder="e.g. Hero Banner"/></Field><Field label="HERO IMAGE (LINK)"><Input value={ap.heroImage} onChange={v=>upWebPart(wa.id,tabIdx,"heroImage",v)} placeholder="https://..."/></Field></div>
+                  <div className="hub-grid-2" style={g(2)}><Field label="MAIN HEADING"><Input value={ap.heading} onChange={v=>upWebPart(wa.id,tabIdx,"heading",v)} placeholder="Main headline"/></Field><Field label="SUBCOPY"><Input value={ap.subcopy} onChange={v=>upWebPart(wa.id,tabIdx,"subcopy",v)} placeholder="Supporting copy"/></Field></div>
+                  <div className="hub-grid-2" style={g(2)}><Field label="CTA"><Input value={ap.cta} onChange={v=>upWebPart(wa.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={ap.secondaryCta} onChange={v=>upWebPart(wa.id,tabIdx,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>
+                  <Field label="ADDITIONAL NOTES"><TextArea value={ap.notes} onChange={v=>upWebPart(wa.id,tabIdx,"notes",v)} placeholder="Additional notes..." rows={2}/></Field>
+                </div>
+              </div>
+              {/* Footer */}
+              <div style={{padding:"14px 22px",borderTop:`1px solid ${C.g88}`,display:"flex",alignItems:"center",justifyContent:"space-between",background:C.g94}}>
+                {webAssets.length>1?<button onClick={()=>rmWA(wa.id)} style={{padding:"8px 14px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>REMOVE ASSET</button>:<div/>}
+                <div style={{display:"flex",alignItems:"center",gap:10}}>
+                  <div style={{display:"flex",alignItems:"center",gap:4}}>{wa.parts.map((p,i)=>{const s=BRIEF_STATUSES.find(x=>x.key===p.briefStatus);return<div key={i} style={{width:8,height:8,borderRadius:4,background:s?.color||C.g70}}/>;})}</div>
+                  <span style={{fontSize:10,...bd,color:C.g70,fontFamily:ff}}>{completeParts}/{wa.parts.length} complete</span>
+                </div>
+              </div>
+            </>}
+          </div>
+          {!wa.collapsed&&<div style={{display:"flex",justifyContent:"flex-end",marginTop:6}}><button onClick={()=>dupWeb(wa)} style={{padding:"8px 16px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,fontSize:10,...hd,color:C.g50,display:"flex",alignItems:"center",gap:6}}>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>DUPLICATE WEB ASSET
+          </button></div>}
+        </div>);})}
+        {/* Web Locale Picker Modal */}
+        {showWebLocalePicker&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowWebLocalePicker(null)}>
+          <div onClick={e=>e.stopPropagation()} style={{background:C.card,...rad,padding:"28px",maxWidth:360,width:"90%",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
+            <div style={{fontSize:14,...hd,color:C.black,fontFamily:ff,marginBottom:6}}>ADD TRANSLATED VARIANT</div>
+            <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff,marginBottom:18,lineHeight:1.5}}>Select a locale. All fields will be copied and translated.</div>
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {LOCALES.filter(l=>!(webAssets.find(x=>x.id===showWebLocalePicker)?.parts||[]).map(p=>p.locale).includes(l)).map(l=>(
+                <button key={l} onClick={()=>{addWebPart(showWebLocalePicker,l);setShowWebLocalePicker(null);}} style={{padding:"12px 16px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,fontSize:13,fontWeight:500,color:C.black,textAlign:"left",display:"flex",alignItems:"center",justifyContent:"space-between"}} onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background=C.card}>
+                  <span>{l}</span>{LANG[l]?<span style={{fontSize:10,...hd,color:C.blue,fontFamily:ff}}>AUTO-TRANSLATE</span>:<span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>COPY ONLY</span>}
+                </button>
+              ))}
+            </div>
+            <button onClick={()=>setShowWebLocalePicker(null)} style={{width:"100%",marginTop:14,padding:"10px",border:`1px solid ${C.g88}`,...rad,background:C.g94,cursor:"pointer",fontFamily:ff,fontSize:11,...hd,color:C.g50}}>CANCEL</button>
+          </div>
+        </div>}
       </Sec>}
 
       {ch.includes("email")&&<Sec title="EMAIL ASSETS (CRM)" num={String(++si).padStart(2,"0")} collapsed={sec.email} onToggle={()=>tog("email")} accent={C.yellow}>
@@ -295,7 +386,7 @@ export default function App(){
                 <div style={{display:"flex",alignItems:"center",gap:12,flex:1,minWidth:0}}>
                   <div style={{width:4,height:28,...rad,background:C.yellow,flexShrink:0}}/>
                   <span style={{fontSize:15,...hd,color:C.black,fontFamily:ff,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{titleDisplay||numStr}</span>
-                  {em.parts.length>1&&<span style={{padding:"2px 8px",...rad,background:C.yellow+"33",color:"#92400e",fontSize:9,...hd,fontFamily:ff,flexShrink:0}}>{em.parts.length} PARTS</span>}
+                  {em.parts.length>1&&<span style={{padding:"2px 8px",...rad,background:C.yellow+"33",color:"#92400e",fontSize:9,...hd,fontFamily:ff,flexShrink:0}}>{em.parts.length} VARIANTS</span>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
                   <span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{dateRange}</span>
@@ -324,14 +415,14 @@ export default function App(){
                   {em.parts.length>1&&<button onClick={e=>{e.stopPropagation();removeEmailPart(em.id,i);}} style={{padding:"2px 6px",border:"none",background:"transparent",cursor:"pointer",color:C.g70,fontSize:14,lineHeight:1,marginRight:2}}>×</button>}
                 </div>);})}
                 <button onClick={()=>setShowLocalePicker(em.id)} style={{padding:"10px 14px",border:"none",background:"transparent",cursor:"pointer",fontFamily:ff,fontSize:11,...hd,color:C.blue,whiteSpace:"nowrap",display:"flex",alignItems:"center",gap:4}}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>ADD PART
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>VARIANT
                 </button>
               </div>
               {/* Active Part */}
               <div style={{padding:"22px 22px 18px"}}>
                 <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
                   <BriefStatusSelect value={ap.briefStatus} onChange={v=>upEmailPart(em.id,tabIdx,"briefStatus",v)}/>
-                  <div style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE:</label><select value={ap.locale} onChange={e=>upEmailPart(em.id,tabIdx,"locale",e.target.value)} style={{...bi,width:"auto",fontSize:12,padding:"8px 12px",cursor:"pointer"}}><option value="">Select...</option>{LOCALES.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
+                  <div style={{display:"flex",alignItems:"center",gap:8}}><label style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE:</label><select value={ap.locale} onChange={e=>changePartLocale(em.id,tabIdx,e.target.value)} style={{...bi,width:"auto",fontSize:12,padding:"8px 12px",cursor:"pointer"}}><option value="">Select...</option>{LOCALES.map(l=><option key={l} value={l}>{l}</option>)}</select></div>
                 </div>
                 {/* Figma + Brief Links */}
                 <div style={{display:"flex",gap:10,marginBottom:18,flexWrap:"wrap",alignItems:"center"}}>
@@ -372,7 +463,7 @@ export default function App(){
         {/* Locale Picker Modal */}
         {showLocalePicker&&<div style={{position:"fixed",inset:0,background:"rgba(0,0,0,0.4)",zIndex:200,display:"flex",alignItems:"center",justifyContent:"center"}} onClick={()=>setShowLocalePicker(null)}>
           <div onClick={e=>e.stopPropagation()} style={{background:C.card,...rad,padding:"28px",maxWidth:360,width:"90%",boxShadow:"0 20px 60px rgba(0,0,0,0.15)"}}>
-            <div style={{fontSize:14,...hd,color:C.black,fontFamily:ff,marginBottom:6}}>ADD TRANSLATED PART</div>
+            <div style={{fontSize:14,...hd,color:C.black,fontFamily:ff,marginBottom:6}}>ADD TRANSLATED VARIANT</div>
             <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff,marginBottom:18,lineHeight:1.5}}>Select a locale. All fields will be copied and translated.</div>
             <div style={{display:"flex",flexDirection:"column",gap:6}}>
               {LOCALES.filter(l=>!(emails.find(x=>x.id===showLocalePicker)?.parts||[]).map(p=>p.locale).includes(l)).map(l=>(

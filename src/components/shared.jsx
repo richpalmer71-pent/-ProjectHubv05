@@ -63,9 +63,11 @@ export const tx = async (fields, locale) => {
   const translated = {...fields};
   for (const [key, val] of filled) {
     try {
-      const r = await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(val)+"&langpair=en|"+langCode);
+      await new Promise(r=>setTimeout(r,300));
+      const r = await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(val.substring(0,500))+"&langpair=en|"+langCode+"&de=pentland@hub.com");
+      if(!r.ok) continue;
       const d = await r.json();
-      if(d.responseData && d.responseData.translatedText) translated[key] = d.responseData.translatedText;
+      if(d.responseData && d.responseData.translatedText && !d.responseData.translatedText.includes("MYMEMORY WARNING")) translated[key] = d.responseData.translatedText;
     } catch(e) { /* keep original */ }
   }
   return translated;
