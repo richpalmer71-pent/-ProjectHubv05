@@ -155,6 +155,23 @@ export default function App(){
           <div style={{fontSize:10,...hd,color:C.g70,fontFamily:ff,marginBottom:4}}>CURRENT PROJECT</div>
           <div style={{fontSize:20,fontWeight:700,color:C.black,fontFamily:ff}}>{jobNum}</div>
         </Card>
+        {/* Dropbox Folder Status */}
+        {dbxStatus&&<Card style={{marginBottom:10,padding:"12px 20px",borderLeft:`4px solid ${dbxStatus==="done"?C.green:dbxStatus==="error"?"#ef4444":C.blue}`}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            {dbxStatus==="creating"&&<><div style={{width:14,height:14,border:`2px solid ${C.g88}`,borderTop:`2px solid ${C.blue}`,borderRadius:"50%",animation:"dbxspin 0.8s linear infinite"}}/><span style={{fontSize:11,...bd,color:C.blue,fontFamily:ff}}>Creating Dropbox folders...</span><style>{`@keyframes dbxspin{to{transform:rotate(360deg)}}`}</style></>}
+            {dbxStatus==="done"&&<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span style={{fontSize:11,...bd,color:C.green,fontFamily:ff}}>Dropbox folders created</span></>}
+            {dbxStatus==="error"&&<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style={{fontSize:11,...bd,color:"#ef4444",fontFamily:ff}}>Failed — check Zapier</span><button onClick={()=>createDropboxFolders(jobNum,title,brand)} style={{marginLeft:8,padding:"4px 12px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:9,...hd,fontFamily:ff,cursor:"pointer"}}>RETRY</button></>}
+          </div>
+        </Card>}
+        {!dbxStatus&&isRealJobNum(jobNum)&&<Card style={{marginBottom:10,padding:"12px 20px"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={dbxCreated?C.green:C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+              <span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{dbxCreated?"Dropbox folders ready":"Create Dropbox folders"}</span>
+            </div>
+            <button onClick={()=>createDropboxFolders(jobNum,title,brand)} style={{padding:"6px 14px",border:dbxCreated?`1px solid ${C.g88}`:"none",...rad,background:dbxCreated?C.card:C.black,color:dbxCreated?C.g50:C.card,fontSize:9,...hd,fontFamily:ff,cursor:"pointer"}}>{dbxCreated?"RE-CREATE":"CREATE DROPBOX FOLDER"}</button>
+          </div>
+        </Card>}
         <div style={{display:"flex",flexDirection:"column",gap:5}}>
           {MODULES.map(m=>{const vk=m.key==="brief"?"form":m.key;return(
             <button key={m.key} onClick={()=>setView(vk)} style={{width:"100%",padding:"14px 18px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,textAlign:"left",display:"flex",alignItems:"center",gap:12}}>
