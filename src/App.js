@@ -227,6 +227,26 @@ export default function App(){
         <div className="hub-grid-3" style={g(3)}><Field label="START DATE" required><Input type="date" value={sd} onChange={v=>{setSd(v);markDirty("overview");}}/></Field><Field label="END DATE" required><Input type="date" value={ed} onChange={v=>{setEd(v);markDirty("overview");}}/></Field><Field label="HANDOVER DATE" required><Input type="date" value={hd2} onChange={v=>{setHd2(v);markDirty("overview");}}/></Field></div>
       </Card>
       <SaveBar dirty={modDirty.overview} saved={modSaved.overview} onSave={()=>saveModule("overview")}/>
+      {/* Dropbox Folder Creation */}
+      <Card style={{padding:"16px 24px"}}>
+        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:10}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={dbxCreated?C.green:dbxStatus==="creating"?C.blue:C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+            <div>
+              <div style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>DROPBOX PROJECT FOLDER</div>
+              {dbxStatus==="creating"&&<div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}><div style={{width:12,height:12,border:`2px solid ${C.g88}`,borderTop:`2px solid ${C.blue}`,borderRadius:"50%",animation:"dbxspin 0.8s linear infinite"}}/><span style={{fontSize:11,...bd,color:C.blue,fontFamily:ff}}>Creating folder structure for <strong>{dbxFolder}</strong>...</span><style>{`@keyframes dbxspin{to{transform:rotate(360deg)}}`}</style></div>}
+              {dbxStatus==="done"&&<div style={{fontSize:11,...bd,color:C.green,fontFamily:ff,marginTop:4}}>Folders created for <strong>{dbxFolder}</strong></div>}
+              {dbxStatus==="error"&&<div style={{fontSize:11,...bd,color:"#ef4444",fontFamily:ff,marginTop:4}}>Failed to create folders — check your Zapier connection</div>}
+              {!dbxStatus&&!dbxCreated&&<div style={{fontSize:11,...bd,color:C.g70,fontFamily:ff,marginTop:4}}>{isRealJobNum(jobNum)?"Ready to create project folders in Dropbox":"Enter a real job number above, then create your Dropbox folders"}</div>}
+              {!dbxStatus&&dbxCreated&&<div style={{fontSize:11,...bd,color:C.g50,fontFamily:ff,marginTop:4}}>Folders exist for <strong style={{color:C.black}}>{dbxFolder}</strong></div>}
+            </div>
+          </div>
+          <div style={{display:"flex",gap:6}}>
+            {dbxStatus==="error"&&<button onClick={()=>createDropboxFolders(jobNum,title,brand)} style={{padding:"8px 18px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>RETRY</button>}
+            {!dbxStatus&&<button onClick={()=>{if(isRealJobNum(jobNum)){createDropboxFolders(jobNum,title,brand);}}} disabled={!isRealJobNum(jobNum)} style={{padding:"8px 18px",border:!isRealJobNum(jobNum)?`1px solid ${C.g88}`:dbxCreated?`1px solid ${C.g88}`:"none",...rad,background:!isRealJobNum(jobNum)?C.g94:dbxCreated?C.card:C.black,color:!isRealJobNum(jobNum)?C.g88:dbxCreated?C.g50:C.card,fontSize:10,...hd,fontFamily:ff,cursor:isRealJobNum(jobNum)?"pointer":"default"}}>{dbxCreated?"RE-CREATE FOLDERS":"CREATE DROPBOX FOLDER"}</button>}
+          </div>
+        </div>
+      </Card>
     </div>
   );
 
