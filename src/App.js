@@ -20,6 +20,9 @@ export default function App(){
   const CopyBriefLink=({emailNum,locale})=>{const loc=locale?localeShort(locale):`P1`;const ref=`E${String(emailNum).padStart(2,"0")}-${loc}`;const url=`https://pentland-hub.vercel.app/brief/PEN-0000/${ref}`;const k=emailNum+"-"+loc;const copied=copyState[k];const doCopy=()=>{navigator.clipboard.writeText(url).then(()=>{setCopyState(s=>({...s,[k]:true}));setTimeout(()=>setCopyState(s=>({...s,[k]:false})),2000);}).catch(()=>{});};return(<button onClick={doCopy} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",border:`1px solid ${copied?C.green+"66":C.g88}`,...rad,background:copied?C.green+"18":C.card,color:copied?C.green:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>{copied?"COPIED!":"COPY BRIEF LINK"}</button>);};
   const [sec,setSec]=useState({channels:false,web:false,email:false,paid:false});
   const tog=k=>setSec(s=>({...s,[k]:!s[k]}));
+  const [dbxStatus,setDbxStatus]=useState(null); // null | "creating" | "done" | "error"
+  const [dbxFolder,setDbxFolder]=useState("");
+  const createDropboxFolders=async(jn,proj,br)=>{if(!jn||dbxStatus==="creating")return;setDbxStatus("creating");const folderName=`${jn}${proj?" — "+proj:""}`;setDbxFolder(folderName);try{await fetch("https://hooks.zapier.com/hooks/catch/26763385/uxi2iim/",{method:"POST",body:JSON.stringify({job_number:jn,project_name:proj||"",brand:br||"",created_by:"hub@pentland.com",folder_name:folderName})});setDbxStatus("done");setTimeout(()=>setDbxStatus(null),8000);}catch(e){setDbxStatus("error");setTimeout(()=>setDbxStatus(null),5000);}};
   const [profiles,setProfiles]=useState(DEFAULT_PROFILES);
   const addUser=(newUser)=>{if(typeof newUser==="string"){if(profiles.find(p=>p.email===newUser))return;setProfiles(p=>[...p,{firstName:"",lastName:"",email:newUser,jobTitle:"",department:""}]);}else{if(profiles.find(p=>p.email===newUser.email))return;setProfiles(p=>[...p,{...newUser,jobTitle:newUser.jobTitle||"",department:newUser.department||""}]);}};
   const updateProfile=(email,updates)=>setProfiles(p=>p.map(u=>u.email===email?{...u,...updates}:u));
@@ -61,7 +64,7 @@ export default function App(){
   const [notifySent,setNotifySent]=useState(false);
   const [modDirty,setModDirty]=useState({}); const [modSaved,setModSaved]=useState({});
   const markDirty=(mod)=>{setModDirty(d=>({...d,[mod]:true}));setModSaved(s=>({...s,[mod]:false}));};
-  const saveModule=(mod)=>{setModDirty(d=>({...d,[mod]:false}));setModSaved(s=>({...s,[mod]:true}));setTimeout(()=>setModSaved(s=>({...s,[mod]:false})),3000);};
+  const saveModule=(mod)=>{setModDirty(d=>({...d,[mod]:false}));setModSaved(s=>({...s,[mod]:true}));setTimeout(()=>setModSaved(s=>({...s,[mod]:false})),3000);if(mod==="overview"&&jobNum&&title&&!dbxFolder.includes(title)){createDropboxFolders(jobNum,title,brand);}};
   const [view,setView]=useState("landing"); const [searchJob,setSearchJob]=useState("");
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const [projectStatus,setProjectStatus]=useState("active");
@@ -95,15 +98,15 @@ export default function App(){
           <p style={{fontSize:14,color:C.g50,fontFamily:ff,marginTop:8,...bd}}>End-to-end project tracking from conception to delivery.</p>
         </div>
         <div style={{display:"flex",flexDirection:"column",gap:8}}>
-          <Card style={{cursor:"pointer"}}><button onClick={()=>{setJobNum("NEW-"+Date.now().toString(36).toUpperCase().slice(-6));setView("project");}} style={{width:"100%",border:"none",background:"transparent",cursor:"pointer",fontFamily:ff,textAlign:"left",padding:4}}>
+          <Card style={{cursor:"pointer"}}><button onClick={()=>{const jn="NEW-"+Date.now().toString(36).toUpperCase().slice(-6);setJobNum(jn);setView("project");createDropboxFolders(jn,"","");}} style={{width:"100%",border:"none",background:"transparent",cursor:"pointer",fontFamily:ff,textAlign:"left",padding:4}}>
             <div style={{fontSize:14,...hd,color:C.black,fontFamily:ff}}>CREATE NEW PROJECT</div>
             <div style={{fontSize:13,color:C.g70,fontFamily:ff,marginTop:2,...bd}}>Start fresh</div>
           </button></Card>
           <Card>
             <div style={{fontSize:14,...hd,color:C.black,fontFamily:ff,marginBottom:8}}>ENTER JOB NUMBER</div>
             <div style={{display:"flex",gap:8}}>
-              <input value={searchJob} onChange={e=>setSearchJob(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchJob.trim()){setJobNum(searchJob.trim());setView("project");}}} placeholder="e.g. PEN-2025-001" style={{...bi,flex:1}}/>
-              <button onClick={()=>{if(searchJob.trim()){setJobNum(searchJob.trim());setView("project");}}} style={{padding:"11px 20px",border:"none",...rad,background:C.black,color:C.card,fontSize:12,...hd,fontFamily:ff,cursor:"pointer"}}>GO</button>
+              <input value={searchJob} onChange={e=>setSearchJob(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchJob.trim()){setJobNum(searchJob.trim());setView("project");createDropboxFolders(searchJob.trim(),"","");}}} placeholder="e.g. PEN-2025-001" style={{...bi,flex:1}}/>
+              <button onClick={()=>{if(searchJob.trim()){setJobNum(searchJob.trim());setView("project");createDropboxFolders(searchJob.trim(),"","");}}} style={{padding:"11px 20px",border:"none",...rad,background:C.black,color:C.card,fontSize:12,...hd,fontFamily:ff,cursor:"pointer"}}>GO</button>
             </div>
           </Card>
           <div style={{height:1,background:C.g88,margin:"8px 0"}}/>
@@ -254,6 +257,13 @@ export default function App(){
   // BRIEF FORM
   return ML("MULTI-CHANNEL HUB","PROJECT BRIEF",C.red,
     <div style={{display:"flex",flexDirection:"column",gap:14,paddingBottom:80}}>
+      {dbxStatus&&<Card style={{padding:"14px 24px",borderLeft:`4px solid ${dbxStatus==="done"?C.green:dbxStatus==="error"?"#ef4444":C.blue}`}}>
+        <div style={{display:"flex",alignItems:"center",gap:10}}>
+          {dbxStatus==="creating"&&<><div style={{width:16,height:16,border:`2px solid ${C.g88}`,borderTop:`2px solid ${C.blue}`,borderRadius:"50%",animation:"dbxspin 0.8s linear infinite"}}/><span style={{fontSize:12,...bd,color:C.blue,fontFamily:ff}}>Creating Dropbox folder structure for <strong>{dbxFolder}</strong>...</span><style>{`@keyframes dbxspin{to{transform:rotate(360deg)}}`}</style></>}
+          {dbxStatus==="done"&&<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span style={{fontSize:12,...bd,color:C.green,fontFamily:ff}}>Dropbox folders created for <strong>{dbxFolder}</strong></span></>}
+          {dbxStatus==="error"&&<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style={{fontSize:12,...bd,color:"#ef4444",fontFamily:ff}}>Failed to create Dropbox folders — check your Zapier connection</span></>}
+        </div>
+      </Card>}
       <Card style={{padding:"14px 24px"}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
