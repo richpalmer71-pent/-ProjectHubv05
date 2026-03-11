@@ -24,7 +24,7 @@ export default function App(){
   const [dbxFolder,setDbxFolder]=useState("");
   const [dbxCreated,setDbxCreated]=useState(false);
   const isRealJobNum=(jn)=>jn&&!jn.startsWith("NEW-")&&jn.trim().length>=3;
-  const createDropboxFolders=async(jn,proj,br)=>{if(!jn||dbxStatus==="creating")return;setDbxStatus("creating");const folderName=`${jn}${proj?" — "+proj:""}`;setDbxFolder(folderName);try{await fetch("https://hooks.zapier.com/hooks/catch/26763385/uxi2iim/",{method:"POST",body:JSON.stringify({job_number:jn,project_name:proj||"",brand:br||"",created_by:"hub@pentland.com",folder_name:folderName})});setDbxStatus("done");setDbxCreated(true);setTimeout(()=>setDbxStatus(null),8000);}catch(e){setDbxStatus("error");setTimeout(()=>setDbxStatus(null),5000);}};;
+  const createDropboxFolders=async(jn,proj,br)=>{if(!jn||dbxStatus==="creating")return;setDbxStatus("creating");const folderName=`${jn}${proj?" — "+proj:""}`;setDbxFolder(folderName);try{await fetch("https://hooks.zapier.com/hooks/catch/26763385/uxi2iim/",{method:"POST",body:JSON.stringify({job_number:jn,project_name:proj||"",brand:br||"",created_by:"hub@pentland.com",folder_name:folderName})});setDbxStatus("done");setDbxCreated(true);setTimeout(()=>setDbxStatus(null),8000);}catch(e){setDbxStatus("error");setTimeout(()=>setDbxStatus(null),5000);}};
   const [profiles,setProfiles]=useState(DEFAULT_PROFILES);
   const addUser=(newUser)=>{if(typeof newUser==="string"){if(profiles.find(p=>p.email===newUser))return;setProfiles(p=>[...p,{firstName:"",lastName:"",email:newUser,jobTitle:"",department:""}]);}else{if(profiles.find(p=>p.email===newUser.email))return;setProfiles(p=>[...p,{...newUser,jobTitle:newUser.jobTitle||"",department:newUser.department||""}]);}};
   const updateProfile=(email,updates)=>setProfiles(p=>p.map(u=>u.email===email?{...u,...updates}:u));
@@ -217,7 +217,7 @@ export default function App(){
         </div>}
 
         {/* Hidden Admin Trigger — small dot in bottom right */}
-        {!showAdmin&&<div onClick={()=>setShowAdmin(true)} style={{position:"fixed",bottom:14,right:14,cursor:"pointer",opacity:0.2,transition:"opacity 0.2s",fontSize:16,lineHeight:1}} onMouseEnter={e=>e.currentTarget.style.opacity="0.7"} onMouseLeave={e=>e.currentTarget.style.opacity="0.2"}} title="">&#9760;</div>}
+        {!showAdmin&&<div onClick={()=>setShowAdmin(true)} style={{position:"fixed",bottom:14,right:14,cursor:"pointer",opacity:0.2,transition:"opacity 0.2s",fontSize:16,lineHeight:1}} onMouseEnter={e=>e.currentTarget.style.opacity="0.7"} onMouseLeave={e=>e.currentTarget.style.opacity="0.2"} title="">{"\u2620"}</div>}
       </div>
     </div>
   );
