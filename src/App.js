@@ -73,6 +73,55 @@ export default function App(){
   const [actionMsg,setActionMsg]=useState(null);
   const [authed,setAuthed]=useState(false);
   const [pwInput,setPwInput]=useState("");
+  const [showAdmin,setShowAdmin]=useState(false);
+  const [purgeStep,setPurgeStep]=useState(0); // 0=hidden, 1=confirm, 2=password
+  const [purgePw,setPurgePw]=useState("");
+  const [purgeError,setPurgeError]=useState(false);
+  const [adminMsg,setAdminMsg]=useState(null);
+
+  // DEMO MODE — load sample data
+  const loadDemo=()=>{
+    setJobNum("PEN-2025-0042");setBrand("Speedo");setTitle("Summer 25 Launch");
+    setObj("Drive awareness and sales for the Summer 2025 Speedo collection across all digital channels.");
+    setLoc(["UK (ENG)","DE (GER)","FR (FR)"]);setSd("2025-03-01");setEd("2025-06-15");setHd2("2025-05-20");
+    setTkTitle("SS25 Digital Toolkit");setDam("https://dam.pentland.com/speedo-ss25");setAb("https://assetbank.pentland.com/speedo");setDf("https://figma.com/speedo-ss25");setCpTk("On-brand tone of voice. Active, confident, inclusive.");setBg("Follow Speedo brand guidelines v4.2");
+    setCh(["web","email","paid"]);
+    setWebAssets([{...defaultWebCard(1),name:"Homepage Hero Banner",parts:[{...defaultWebPart("UK (ENG)"),name:"Homepage Hero",heading:"Make Waves This Summer",subcopy:"New collection now live",cta:"Shop Now",secondaryCta:"Explore Collection",briefStatus:"with_design"}]},{...defaultWebCard(2),name:"PLP Category Banner",collapsed:true,parts:[{...defaultWebPart("UK (ENG)"),name:"PLP Banner",heading:"Swim Collection",subcopy:"Performance meets style",cta:"View All",briefStatus:"with_copy"}]}]);
+    setWebOwner("richard@pentland.com");
+    setEmails([{...defaultEmailCard(1),name:"Launch Email",sendDate:"2025-06-01",handoverDate:"2025-05-20",parts:[{...defaultEmailPart("UK (ENG)"),subjectLine:"Make Waves This Summer",preHeader:"New Speedo collection is here",heading:"Dive Into Summer 25",bodyCopy:"Our latest collection combines cutting-edge technology with bold design.",cta:"Shop Now",secondaryCta:"Explore",briefStatus:"awaiting_approval"}]},{...defaultEmailCard(2),name:"Promo Follow-Up",sendDate:"2025-06-10",handoverDate:"2025-05-28",collapsed:true,parts:[{...defaultEmailPart("UK (ENG)"),subjectLine:"Don't Miss Out",heading:"Summer Essentials",bodyCopy:"Get ready for the season with our top picks.",cta:"Shop Now",briefStatus:"with_copy"}]}]);
+    setEmailOwner("farah@pentland.com");
+    setPs({"PMAX / PPC":["1200x628","1200x1200"],"PAID SOCIAL":["1080x1080","1080x1350"]});
+    setPhi("https://dam.pentland.com/speedo-hero.jpg");setPc("Bold headlines, active lifestyle messaging. CTAs: Shop Now, Explore.");setPv("15s product showcase for social.");
+    setPaidOwner("richard@pentland.com");
+    setProfiles(DEFAULT_PROFILES);
+    setDbxCreated(false);setDbxStatus(null);setDbxFolder("");
+    setModDirty({});setModSaved({});
+    setProjectStatus("active");setActionMsg(null);
+    setView("project");setShowAdmin(false);
+    setAdminMsg("DEMO MODE LOADED");setTimeout(()=>setAdminMsg(null),3000);
+  };
+
+  // PURGE — reset everything to blank
+  const purgeAll=()=>{
+    setJobNum("");setBrand("");setTitle("");setObj("");setLoc([]);setSd("");setEd("");setHd2("");
+    setTkTitle("");setDam("");setAb("");setDf("");setCpTk("");setBg("");
+    setCh([]);
+    setWebAssets([defaultWebCard(1)]);setWebOwner("");
+    setEmails([defaultEmailCard(1)]);setEmailOwner("");setEmailSort("asc");
+    setEt([]);
+    setPs({});setOs("");setPhi("");setPc("");setPv("");setPaidOwner("");
+    setDl("");setCl("");setCrl("");setPl("");
+    setPdl("");setPcl("");setPcrl("");setPpl("");setPfa("");
+    setEs(null);setHo("");
+    setProfiles(DEFAULT_PROFILES);
+    setDbxCreated(false);setDbxStatus(null);setDbxFolder("");
+    setModDirty({});setModSaved({});
+    setProjectStatus("active");setActionMsg(null);
+    setShowNotifyModal(false);setNotifyEmail("");setNotifySent(false);
+    setSearchJob("");setShowAdmin(false);setPurgeStep(0);setPurgePw("");
+    setView("landing");
+    setAdminMsg("SYSTEM PURGED");setTimeout(()=>setAdminMsg(null),3000);
+  };
   const [pwError,setPwError]=useState(false);
   const GATE_PW = "pentlandhub";
   const checkPw = () => { if(pwInput===GATE_PW){setAuthed(true);setPwError(false);setPwInput("");}else{setPwError(true);} };
@@ -121,6 +170,54 @@ export default function App(){
             <span style={{marginLeft:"auto",color:C.g70,fontSize:16}}>›</span>
           </button></Card>
         </div>
+
+        {/* Admin Message Toast */}
+        {adminMsg&&<div style={{marginTop:16,padding:"10px 18px",background:adminMsg.includes("PURGE")?C.red:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{adminMsg}</div>}
+
+        {/* Admin Panel */}
+        {showAdmin&&<div style={{marginTop:20,padding:"20px 24px",background:C.card,border:`1px solid ${C.g88}`,...rad}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:16}}>
+            <div style={{display:"flex",alignItems:"center",gap:8}}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              <span style={{fontSize:13,...hd,color:C.black,fontFamily:ff}}>ADMIN CONTROLS</span>
+            </div>
+            <button onClick={()=>{setShowAdmin(false);setPurgeStep(0);setPurgePw("");setPurgeError(false);}} style={{padding:"4px 10px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>CLOSE</button>
+          </div>
+
+          {/* Load Demo */}
+          <button onClick={loadDemo} style={{width:"100%",padding:"14px 20px",border:`1px solid ${C.blue}`,...rad,background:C.blue+"12",color:C.blue,fontSize:12,...hd,fontFamily:ff,cursor:"pointer",marginBottom:10,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.blue} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            LOAD DEMO MODE
+          </button>
+
+          {/* Purge */}
+          {purgeStep===0&&<button onClick={()=>setPurgeStep(1)} style={{width:"100%",padding:"14px 20px",border:"1px solid #ef444444",...rad,background:"#ef444412",color:"#ef4444",fontSize:12,...hd,fontFamily:ff,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            PURGE SYSTEM
+          </button>}
+
+          {purgeStep===1&&<div style={{padding:"16px 20px",border:"1px solid #ef444444",...rad,background:"#ef444408"}}>
+            <div style={{fontSize:13,...hd,color:"#ef4444",fontFamily:ff,marginBottom:8}}>ARE YOU SURE?</div>
+            <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff,marginBottom:14,lineHeight:1.5}}>This will permanently delete all project data, briefs, profiles and settings. This cannot be undone.</div>
+            <div style={{display:"flex",gap:8}}>
+              <button onClick={()=>setPurgeStep(2)} style={{flex:1,padding:"10px",border:"none",...rad,background:"#ef4444",color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>YES, CONTINUE</button>
+              <button onClick={()=>{setPurgeStep(0);setPurgePw("");setPurgeError(false);}} style={{flex:1,padding:"10px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>CANCEL</button>
+            </div>
+          </div>}
+
+          {purgeStep===2&&<div style={{padding:"16px 20px",border:"1px solid #ef444444",...rad,background:"#ef444408"}}>
+            <div style={{fontSize:13,...hd,color:"#ef4444",fontFamily:ff,marginBottom:8}}>ENTER ADMIN PASSWORD</div>
+            <div style={{display:"flex",gap:8}}>
+              <input type="password" value={purgePw} onChange={e=>{setPurgePw(e.target.value);setPurgeError(false);}} onKeyDown={e=>{if(e.key==="Enter"){if(purgePw==="pentlandhub"){purgeAll();}else{setPurgeError(true);}}}} placeholder="Admin password" style={{...bi,flex:1,border:purgeError?"1px solid #ef4444":`1px solid ${C.g88}`}}/>
+              <button onClick={()=>{if(purgePw==="pentlandhub"){purgeAll();}else{setPurgeError(true);}}} style={{padding:"10px 20px",border:"none",...rad,background:"#ef4444",color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>PURGE</button>
+            </div>
+            {purgeError&&<div style={{fontSize:11,...hd,color:"#ef4444",fontFamily:ff,marginTop:8}}>INCORRECT PASSWORD</div>}
+            <button onClick={()=>{setPurgeStep(0);setPurgePw("");setPurgeError(false);}} style={{marginTop:8,padding:"6px 14px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>CANCEL</button>
+          </div>}
+        </div>}
+
+        {/* Hidden Admin Trigger — small dot in bottom right */}
+        {!showAdmin&&<div onClick={()=>setShowAdmin(true)} style={{position:"fixed",bottom:14,right:14,cursor:"pointer",opacity:0.2,transition:"opacity 0.2s",fontSize:16,lineHeight:1}} onMouseEnter={e=>e.currentTarget.style.opacity="0.7"} onMouseLeave={e=>e.currentTarget.style.opacity="0.2"}} title="">&#9760;</div>}
       </div>
     </div>
   );
