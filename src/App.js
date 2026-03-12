@@ -101,26 +101,9 @@ export default function App(){
     setAdminMsg("DEMO MODE LOADED");setTimeout(()=>setAdminMsg(null),3000);
   };
 
-  // PURGE — reset everything to blank
+  // PURGE — nuclear option, full page reload for guaranteed clean slate
   const purgeAll=()=>{
-    setJobNum("");setBrand("");setTitle("");setObj("");setLoc([]);setSd("");setEd("");setHd2("");
-    setTkTitle("");setDam("");setAb("");setDf("");setCpTk("");setBg("");
-    setCh([]);
-    setWebAssets([defaultWebCard(1)]);setWebOwner("");
-    setEmails([defaultEmailCard(1)]);setEmailOwner("");setEmailSort("asc");
-    setEt([]);
-    setPs({});setOs("");setPhi("");setPc("");setPv("");setPaidOwner("");
-    setDl("");setCl("");setCrl("");setPl("");
-    setPdl("");setPcl("");setPcrl("");setPpl("");setPfa("");
-    setEs(null);setHo("");
-    setProfiles(DEFAULT_PROFILES);
-    setDbxCreated(false);setDbxStatus(null);setDbxFolder("");
-    setModDirty({});setModSaved({});
-    setProjectStatus("active");setActionMsg(null);
-    setShowNotifyModal(false);setNotifyEmail("");setNotifySent(false);
-    setSearchJob("");setShowAdmin(false);setPurgeStep(0);setPurgePw("");
-    setView("landing");
-    setAdminMsg("SYSTEM PURGED");setTimeout(()=>setAdminMsg(null),3000);
+    window.location.reload();
   };
   const [pwError,setPwError]=useState(false);
   const GATE_PW = "pentlandhub";
