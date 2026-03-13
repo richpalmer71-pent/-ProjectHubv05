@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Playground from "./components/Playground";
 import ResourceManagement from "./components/ResourceManagement";
 import AssetDelivery from "./components/AssetDelivery";
 import FeedbackCentre from "./components/FeedbackCentre";
 import Dashboard from "./components/Dashboard";
 import { C, ff, hd, bd, bi, rad, g, LOCALES, DEFAULT_PROFILES, LANG, tx, ICN, MODULES, Card, Field, Input, TextArea, Chip, CG, EmailSelect, Sec, CT, PageTitle, Sidebar, RESPONSIVE_CSS, sendNotification, ProjectActions, SaveBar, PasswordGate, BriefStatusSelect, BRIEF_STATUSES } from "./components/shared";
+import { saveProject, loadProject, loadProjects, saveToolkit, loadToolkit, saveWebAssets, loadWebAssets, saveEmailAssets, loadEmailAssets, savePaidMedia, loadPaidMedia, loadProfiles as dbLoadProfiles, saveProfile as dbSaveProfile, purgeDatabase, loadDemoData } from "./supabase";
 
 const PAID_SIZE_GROUPS = {"PMAX / PPC":["1200x300","1200x628","1200x1200","960x1200","300x300"],"PAID SOCIAL":["1080x1080","1080x1350","1080x1920"],"DISPLAY":["728x90","970x250","300x250","160x600","300x600"],"AFFILIATES":["336x280","320x50"]};
 const EMAIL_TYPES = ["Launch","Product","Promo","Community"];
@@ -65,8 +66,63 @@ export default function App(){
   const [notifyEmail,setNotifyEmail]=useState("");
   const [notifySent,setNotifySent]=useState(false);
   const [modDirty,setModDirty]=useState({}); const [modSaved,setModSaved]=useState({});
+  const [dbProjectId,setDbProjectId]=useState(null); // tracks the Supabase project UUID
+  const [dbLoading,setDbLoading]=useState(false);
   const markDirty=(mod)=>{setModDirty(d=>({...d,[mod]:true}));setModSaved(s=>({...s,[mod]:false}));};
-  const saveModule=(mod)=>{setModDirty(d=>({...d,[mod]:false}));setModSaved(s=>({...s,[mod]:true}));setTimeout(()=>setModSaved(s=>({...s,[mod]:false})),3000);if(mod==="overview"&&isRealJobNum(jobNum)&&title&&!dbxCreated){createDropboxFolders(jobNum,title,brand);}};
+
+  // SAVE TO DATABASE
+  const saveModule=async(mod)=>{
+    setModDirty(d=>({...d,[mod]:false}));setModSaved(s=>({...s,[mod]:true}));setTimeout(()=>setModSaved(s=>({...s,[mod]:false})),3000);
+    // Dropbox trigger on first save
+    if(mod==="overview"&&isRealJobNum(jobNum)&&title&&!dbxCreated){createDropboxFolders(jobNum,title,brand);}
+    // Save to Supabase
+    if(mod==="overview"&&jobNum){
+      const proj=await saveProject({job_number:jobNum,brand,title,objective,locales,start_date:sd,end_date:ed,handover_date:hd2,channels:ch,status:projectStatus});
+      if(proj)setDbProjectId(proj.id);
+    }
+    if(mod==="toolkit"&&dbProjectId){
+      await saveToolkit(dbProjectId,{toolkit_title:tkTitle,dam_link:damLink,asset_bank_link:abLink,design_files:dFiles,copy_toolkit:cpTk,brand_guidelines:bGuid});
+    }
+    if(mod==="brief"&&dbProjectId){
+      await saveWebAssets(dbProjectId,webAssets);
+      await saveEmailAssets(dbProjectId,emails);
+      await savePaidMedia(dbProjectId,{sizes:ps,other_sizes:os,hero_image:phi,copy_requirements:pc,video_content:pv,owner:paidOwner});
+    }
+  };
+
+  // LOAD FROM DATABASE
+  const loadFromDb=useCallback(async(jn)=>{
+    if(!jn)return false;
+    setDbLoading(true);
+    const proj=await loadProject(jn);
+    if(!proj){setDbLoading(false);return false;}
+    // Populate state from database
+    setDbProjectId(proj.id);
+    setJobNum(proj.job_number);setBrand(proj.brand||"");setTitle(proj.title||"");
+    setObj(proj.objective||"");setLoc(proj.locales||[]);
+    setSd(proj.start_date||"");setEd(proj.end_date||"");setHd2(proj.handover_date||"");
+    setCh(proj.channels||[]);setProjectStatus(proj.status||"active");
+    // Load toolkit
+    const tk=await loadToolkit(proj.id);
+    if(tk){setTkTitle(tk.toolkit_title||"");setDam(tk.dam_link||"");setAb(tk.asset_bank_link||"");setDf(tk.design_files||"");setCpTk(tk.copy_toolkit||"");setBg(tk.brand_guidelines||"");}
+    // Load web assets
+    const wa=await loadWebAssets(proj.id);
+    if(wa&&wa.length>0){setWebAssets(wa.map(a=>({...a,activeTab:a.active_tab||0,parts:a.parts||[]})));}
+    else{setWebAssets([defaultWebCard(1)]);}
+    // Load email assets
+    const ea=await loadEmailAssets(proj.id);
+    if(ea&&ea.length>0){setEmails(ea.map(a=>({...a,activeTab:a.active_tab||0,sendDate:a.send_date||"",handoverDate:a.handover_date||"",parts:a.parts||[]})));}
+    else{setEmails([defaultEmailCard(1)]);}
+    // Load paid media
+    const pm=await loadPaidMedia(proj.id);
+    if(pm){setPs(pm.sizes||{});setOs(pm.other_sizes||"");setPhi(pm.hero_image||"");setPc(pm.copy_requirements||"");setPv(pm.video_content||"");setPaidOwner(pm.owner||"");}
+    // Load profiles
+    const profs=await dbLoadProfiles();
+    if(profs&&profs.length>0){setProfiles(profs.map(p=>({email:p.email,firstName:p.first_name,lastName:p.last_name,jobTitle:p.job_title,department:p.department})));}
+    setDbLoading(false);
+    return true;
+  },[]);
+
   const [view,setView]=useState("landing"); const [searchJob,setSearchJob]=useState("");
   const [sidebarOpen,setSidebarOpen]=useState(false);
   const [projectStatus,setProjectStatus]=useState("active");
@@ -80,29 +136,28 @@ export default function App(){
   const [adminMsg,setAdminMsg]=useState(null);
 
   // DEMO MODE — load sample data
-  const loadDemo=()=>{
-    setJobNum("PEN-2025-0042");setBrand("Speedo");setTitle("Summer 25 Launch");
-    setObj("Drive awareness and sales for the Summer 2025 Speedo collection across all digital channels.");
-    setLoc(["UK (ENG)","DE (GER)","FR (FR)"]);setSd("2025-03-01");setEd("2025-06-15");setHd2("2025-05-20");
-    setTkTitle("SS25 Digital Toolkit");setDam("https://dam.pentland.com/speedo-ss25");setAb("https://assetbank.pentland.com/speedo");setDf("https://figma.com/speedo-ss25");setCpTk("On-brand tone of voice. Active, confident, inclusive.");setBg("Follow Speedo brand guidelines v4.2");
-    setCh(["web","email","paid"]);
-    setWebAssets([{...defaultWebCard(1),name:"Homepage Hero Banner",parts:[{...defaultWebPart("UK (ENG)"),name:"Homepage Hero",heading:"Make Waves This Summer",subcopy:"New collection now live",cta:"Shop Now",secondaryCta:"Explore Collection",briefStatus:"with_design"}]},{...defaultWebCard(2),name:"PLP Category Banner",collapsed:true,parts:[{...defaultWebPart("UK (ENG)"),name:"PLP Banner",heading:"Swim Collection",subcopy:"Performance meets style",cta:"View All",briefStatus:"with_copy"}]}]);
-    setWebOwner("richard@pentland.com");
-    setEmails([{...defaultEmailCard(1),name:"Launch Email",sendDate:"2025-06-01",handoverDate:"2025-05-20",parts:[{...defaultEmailPart("UK (ENG)"),subjectLine:"Make Waves This Summer",preHeader:"New Speedo collection is here",heading:"Dive Into Summer 25",bodyCopy:"Our latest collection combines cutting-edge technology with bold design.",cta:"Shop Now",secondaryCta:"Explore",briefStatus:"awaiting_approval"}]},{...defaultEmailCard(2),name:"Promo Follow-Up",sendDate:"2025-06-10",handoverDate:"2025-05-28",collapsed:true,parts:[{...defaultEmailPart("UK (ENG)"),subjectLine:"Don't Miss Out",heading:"Summer Essentials",bodyCopy:"Get ready for the season with our top picks.",cta:"Shop Now",briefStatus:"with_copy"}]}]);
-    setEmailOwner("farah@pentland.com");
-    setPs({"PMAX / PPC":["1200x628","1200x1200"],"PAID SOCIAL":["1080x1080","1080x1350"]});
-    setPhi("https://dam.pentland.com/speedo-hero.jpg");setPc("Bold headlines, active lifestyle messaging. CTAs: Shop Now, Explore.");setPv("15s product showcase for social.");
-    setPaidOwner("richard@pentland.com");
-    setProfiles(DEFAULT_PROFILES);
-    setDbxCreated(false);setDbxStatus(null);setDbxFolder("");
-    setModDirty({});setModSaved({});
-    setProjectStatus("active");setActionMsg(null);
-    setView("project");setShowAdmin(false);
-    setAdminMsg("DEMO MODE LOADED");setTimeout(()=>setAdminMsg(null),3000);
+  const loadDemo=async()=>{
+    setAdminMsg("LOADING DEMO...");setShowAdmin(false);
+    const proj=await loadDemoData();
+    if(proj){
+      await loadFromDb("PEN-2025-0042");
+      setView("project");
+      setAdminMsg("DEMO MODE LOADED");setTimeout(()=>setAdminMsg(null),3000);
+    }else{
+      // Fallback to in-memory demo if database fails
+      setJobNum("PEN-2025-0042");setBrand("Speedo");setTitle("Summer 25 Launch");
+      setObj("Drive awareness and sales for the Summer 2025 Speedo collection across all digital channels.");
+      setLoc(["UK (ENG)","DE (GER)","FR (FR)"]);setSd("2025-03-01");setEd("2025-06-15");setHd2("2025-05-20");
+      setCh(["web","email","paid"]);
+      setView("project");setShowAdmin(false);
+      setAdminMsg("DEMO LOADED (OFFLINE)");setTimeout(()=>setAdminMsg(null),3000);
+    }
   };
 
-  // PURGE — nuclear option, full page reload for guaranteed clean slate
-  const purgeAll=()=>{
+  // PURGE — clear database then reload
+  const purgeAll=async()=>{
+    setAdminMsg("PURGING...");
+    await purgeDatabase();
     window.location.reload();
   };
   const [pwError,setPwError]=useState(false);
@@ -139,8 +194,8 @@ export default function App(){
           <Card>
             <div style={{fontSize:14,...hd,color:C.black,fontFamily:ff,marginBottom:8}}>ENTER JOB NUMBER</div>
             <div style={{display:"flex",gap:8}}>
-              <input value={searchJob} onChange={e=>setSearchJob(e.target.value)} onKeyDown={e=>{if(e.key==="Enter"&&searchJob.trim()){setJobNum(searchJob.trim());setView("project");setDbxCreated(false);}}} placeholder="e.g. PEN-2025-001" style={{...bi,flex:1}}/>
-              <button onClick={()=>{if(searchJob.trim()){setJobNum(searchJob.trim());setView("project");setDbxCreated(false);}}} style={{padding:"11px 20px",border:"none",...rad,background:C.black,color:C.card,fontSize:12,...hd,fontFamily:ff,cursor:"pointer"}}>GO</button>
+              <input value={searchJob} onChange={e=>setSearchJob(e.target.value)} onKeyDown={async e=>{if(e.key==="Enter"&&searchJob.trim()){const jn=searchJob.trim();setJobNum(jn);setDbxCreated(false);await loadFromDb(jn);setView("project");}}} placeholder="e.g. PEN-2025-001" style={{...bi,flex:1}}/>
+              <button onClick={async()=>{if(searchJob.trim()){const jn=searchJob.trim();setJobNum(jn);setDbxCreated(false);await loadFromDb(jn);setView("project");}}} style={{padding:"11px 20px",border:"none",...rad,background:C.black,color:C.card,fontSize:12,...hd,fontFamily:ff,cursor:"pointer"}}>GO</button>
             </div>
           </Card>
           <div style={{height:1,background:C.g88,margin:"8px 0"}}/>
@@ -231,6 +286,14 @@ export default function App(){
           <div style={{fontSize:11,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em",marginBottom:4}}>PENTLAND C&C</div>
           <div style={{fontSize:26,...hd,color:C.black,fontFamily:ff,letterSpacing:"0.03em"}}>PROJECT HUB</div>
         </div>
+        {adminMsg&&<div style={{marginBottom:14,padding:"10px 18px",background:adminMsg.includes("PURGE")?C.red:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{adminMsg}</div>}
+        {dbLoading&&<Card style={{marginBottom:14,textAlign:"center",padding:"18px 28px"}}>
+          <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+            <div style={{width:16,height:16,border:`2px solid ${C.g88}`,borderTop:`2px solid ${C.blue}`,borderRadius:"50%",animation:"dbxspin 0.8s linear infinite"}}/>
+            <span style={{fontSize:12,...bd,color:C.blue,fontFamily:ff}}>Loading project from database...</span>
+            <style>{`@keyframes dbxspin{to{transform:rotate(360deg)}}`}</style>
+          </div>
+        </Card>}
         <Card style={{marginBottom:14,textAlign:"center",padding:"18px 28px"}}>
           <div style={{fontSize:10,...hd,color:C.g70,fontFamily:ff,marginBottom:4}}>CURRENT PROJECT</div>
           <div style={{fontSize:20,fontWeight:700,color:C.black,fontFamily:ff}}>{jobNum}</div>
@@ -652,7 +715,7 @@ export default function App(){
 
       <div className="brief-footer" style={{position:"fixed",bottom:0,left:250,right:0,background:"rgba(236,238,241,0.96)",backdropFilter:"blur(10px)",borderTop:`1px solid ${C.g88}`,padding:"12px 40px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:10,zIndex:100}}>
         {es&&<div style={{position:"absolute",top:-40,left:"50%",transform:"translateX(-50%)",background:C.black,color:C.card,padding:"6px 16px",...rad,fontSize:11,...hd,fontFamily:ff,animation:"fu .2s ease"}}>{es==="handed"?"BRIEF SUBMITTED":"CHANGES SAVED"}</div>}
-        <button onClick={()=>{setEs("saved");setTimeout(()=>setEs(null),3000);setShowNotifyModal(true);}} style={{padding:"11px 24px",border:"none",...rad,background:C.black,color:C.card,fontSize:13,...hd,fontFamily:ff,cursor:"pointer"}}>SAVE CHANGES</button>
+        <button onClick={async()=>{setEs("saved");setTimeout(()=>setEs(null),3000);await saveModule("brief");setShowNotifyModal(true);}} style={{padding:"11px 24px",border:"none",...rad,background:C.black,color:C.card,fontSize:13,...hd,fontFamily:ff,cursor:"pointer"}}>SAVE CHANGES</button>
         <button onClick={()=>{setEs("handed");setTimeout(()=>setEs(null),3000);}} style={{padding:"11px 24px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:13,...hd,fontFamily:ff,cursor:"pointer"}}>SUBMIT BRIEF</button>
       </div>
     </div>
