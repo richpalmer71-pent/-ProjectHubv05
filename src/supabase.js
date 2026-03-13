@@ -229,15 +229,16 @@ export async function saveProfile(profile) {
 
 export async function purgeDatabase() {
   // Delete in order to respect foreign key constraints
-  await supabase.from('approvals').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('paid_media').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('email_assets').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('web_assets').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('toolkit').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  await supabase.from('projects').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  // Keep default profiles but clear any added ones
-  await supabase.from('profiles').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-  // Re-insert defaults
+  // Using .gt('created_at', '1970-01-01') to match ALL rows (Supabase requires a filter)
+  const f = { column: 'created_at', value: '1970-01-01T00:00:00Z' };
+  await supabase.from('approvals').delete().gt('created_at', f.value);
+  await supabase.from('paid_media').delete().gt('created_at', f.value);
+  await supabase.from('email_assets').delete().gt('created_at', f.value);
+  await supabase.from('web_assets').delete().gt('created_at', f.value);
+  await supabase.from('toolkit').delete().gt('created_at', f.value);
+  await supabase.from('projects').delete().gt('created_at', f.value);
+  await supabase.from('profiles').delete().gt('created_at', f.value);
+  // Re-insert default profiles
   await supabase.from('profiles').upsert([
     { email: 'richard.palmer@pentland.com', first_name: 'Richard', last_name: 'Palmer', job_title: 'Digital Designer', department: 'Digital' },
     { email: 'farah.yousaf@pentland.com', first_name: 'Farah', last_name: 'Yousaf', job_title: 'Digital Marketing Manager', department: 'Digital' },
