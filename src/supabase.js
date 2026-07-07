@@ -156,6 +156,7 @@ export async function saveEmailAssets(projectId, assets) {
     parts: a.parts || [],
     active_tab: a.activeTab || 0,
     owner: a.owner || '',
+    template: a.template || 'speedo-qnd',
   }));
   const { data, error } = await supabase.from('email_assets').insert(rows).select();
   if (error) { console.error('saveEmailAssets error:', error); return []; }

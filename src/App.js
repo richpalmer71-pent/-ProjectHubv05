@@ -9,12 +9,17 @@ import { saveProject, loadProject, loadProjects, saveToolkit, loadToolkit, saveW
 
 const PAID_SIZE_GROUPS = {"PMAX / PPC":["1200x300","1200x628","1200x1200","960x1200","300x300"],"PAID SOCIAL":["1080x1080","1080x1350","1080x1920"],"DISPLAY":["728x90","970x250","300x250","160x600","300x600"],"AFFILIATES":["336x280","320x50"]};
 const EMAIL_TYPES = ["Launch","Product","Promo","Community"];
+// Email templates — each defines which brief fields the layout uses.
+const EMAIL_TEMPLATES = [
+  { id:"speedo-qnd", name:"Speedo QND", fields:["subjectLine","preHeader","heroImage","heading","bodyCopy","cta"] },
+  { id:"standard", name:"Standard (all fields)", fields:["subjectLine","preHeader","heroImage","heading","bodyCopy","cta","secondaryCta","notes"] },
+];
 const WEB_PLACEMENTS = ["Homepage","PLP","PDP","Other"];
 const BANNER_TYPES = ["Full Size Hero","Slim Banners","Secondary Banners","Other"];
 const defaultWebPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",name:"",heroImage:"",heading:"",subcopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:""});
 const defaultWebCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",parts:[defaultWebPart("UK (ENG)")],activeTab:0,collapsed:false});
 const defaultEmailPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",subjectLine:"",preHeader:"",heroImage:"",heading:"",bodyCopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:""});
-const defaultEmailCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",sendDate:"",handoverDate:"",parts:[defaultEmailPart("UK (ENG)")],activeTab:0,collapsed:false});
+const defaultEmailCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",sendDate:"",handoverDate:"",template:"speedo-qnd",parts:[defaultEmailPart("UK (ENG)")],activeTab:0,collapsed:false});
 
 export default function App(){
   const [copyState,setCopyState]=useState({});
@@ -581,7 +586,7 @@ export default function App(){
             <button onClick={()=>setEmailSort("desc")} style={{padding:"6px 12px",border:`1px solid ${emailSort==="desc"?C.black:C.g88}`,...rad,background:emailSort==="desc"?C.black:C.card,color:emailSort==="desc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>LATEST</button>
           </div>
         </div>
-        {sortedEmails.map(em=>{const numStr=String(em.num).padStart(2,"0");const titleDisplay=`${numStr}${em.name?` — ${em.name}`:""}`;const ap=em.parts[em.activeTab]||em.parts[0];const tabIdx=em.activeTab;const completeParts=em.parts.filter(p=>p.briefStatus==="complete").length;const dateRange=(em.sendDate||em.handoverDate)?`${em.sendDate||"—"} → ${em.handoverDate||"—"}`:"No dates set";return(<div key={em.id} style={{marginBottom:12}}>
+        {sortedEmails.map(em=>{const numStr=String(em.num).padStart(2,"0");const titleDisplay=`${numStr}${em.name?` — ${em.name}`:""}`;const ap=em.parts[em.activeTab]||em.parts[0];const tabIdx=em.activeTab;const tpl=EMAIL_TEMPLATES.find(t=>t.id===(em.template||"speedo-qnd"))||EMAIL_TEMPLATES[0];const tf=f=>tpl.fields.includes(f);const completeParts=em.parts.filter(p=>p.briefStatus==="complete").length;const dateRange=(em.sendDate||em.handoverDate)?`${em.sendDate||"—"} → ${em.handoverDate||"—"}`:"No dates set";return(<div key={em.id} style={{marginBottom:12}}>
           <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden"}}>
             {/* Collapsed Header */}
             <div onClick={()=>upEmail(em.id,"collapsed",!em.collapsed)} style={{padding:"16px 22px",background:"#D8DBE0",cursor:"pointer",userSelect:"none"}}>
@@ -609,6 +614,7 @@ export default function App(){
                   </div>
                   <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>SEND DATE</label><input type="date" value={em.sendDate} onChange={e=>upEmail(em.id,"sendDate",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:140}}/></div>
                   <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>HANDOVER DATE</label><input type="date" value={em.handoverDate} onChange={e=>upEmail(em.id,"handoverDate",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:140}}/></div>
+                  <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>TEMPLATE</label><select value={em.template||"speedo-qnd"} onChange={e=>upEmail(em.id,"template",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:180,cursor:"pointer"}}>{EMAIL_TEMPLATES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
                 </div>
               </div>
               {/* Tabs */}
@@ -641,12 +647,12 @@ export default function App(){
                 </div>
                 {/* Form */}
                 <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                  <div className="hub-grid-2" style={g(2)}><Field label="SUBJECT LINE"><Input value={ap.subjectLine} onChange={v=>upEmailPart(em.id,tabIdx,"subjectLine",v)} placeholder="Subject line"/></Field><Field label="PRE-HEADER"><Input value={ap.preHeader} onChange={v=>upEmailPart(em.id,tabIdx,"preHeader",v)} placeholder="Preview text"/></Field></div>
-                  <Field label="HERO IMAGE (LINK)"><Input value={ap.heroImage} onChange={v=>upEmailPart(em.id,tabIdx,"heroImage",v)} placeholder="https://..."/></Field>
-                  <Field label="MAIN HEADING"><Input value={ap.heading} onChange={v=>upEmailPart(em.id,tabIdx,"heading",v)} placeholder="Main headline"/></Field>
-                  <Field label="BODY COPY"><TextArea value={ap.bodyCopy} onChange={v=>upEmailPart(em.id,tabIdx,"bodyCopy",v)} placeholder="Body copy..." rows={3}/></Field>
-                  <div className="hub-grid-2" style={g(2)}><Field label="PRIMARY CTA"><Input value={ap.cta} onChange={v=>upEmailPart(em.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={ap.secondaryCta} onChange={v=>upEmailPart(em.id,tabIdx,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>
-                  <Field label="NOTES"><TextArea value={ap.notes} onChange={v=>upEmailPart(em.id,tabIdx,"notes",v)} placeholder="Additional notes..." rows={2}/></Field>
+                  <div className="hub-grid-2" style={g(2)}>{tf("subjectLine")&&<Field label="SUBJECT LINE"><Input value={ap.subjectLine} onChange={v=>upEmailPart(em.id,tabIdx,"subjectLine",v)} placeholder="Subject line"/></Field>}{tf("preHeader")&&<Field label="PRE-HEADER"><Input value={ap.preHeader} onChange={v=>upEmailPart(em.id,tabIdx,"preHeader",v)} placeholder="Preview text"/></Field>}</div>
+                  {tf("heroImage")&&<Field label="HERO IMAGE (LINK)"><Input value={ap.heroImage} onChange={v=>upEmailPart(em.id,tabIdx,"heroImage",v)} placeholder="https://..."/></Field>}
+                  {tf("heading")&&<Field label="MAIN HEADING"><Input value={ap.heading} onChange={v=>upEmailPart(em.id,tabIdx,"heading",v)} placeholder="Main headline"/></Field>}
+                  {tf("bodyCopy")&&<Field label="BODY COPY"><TextArea value={ap.bodyCopy} onChange={v=>upEmailPart(em.id,tabIdx,"bodyCopy",v)} placeholder="Body copy..." rows={3}/></Field>}
+                  {(tf("cta")&&tf("secondaryCta"))?(<div className="hub-grid-2" style={g(2)}><Field label="PRIMARY CTA"><Input value={ap.cta} onChange={v=>upEmailPart(em.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={ap.secondaryCta} onChange={v=>upEmailPart(em.id,tabIdx,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>):(tf("cta")?<Field label="PRIMARY CTA"><Input value={ap.cta} onChange={v=>upEmailPart(em.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field>:null)}
+                  {tf("notes")&&<Field label="NOTES"><TextArea value={ap.notes} onChange={v=>upEmailPart(em.id,tabIdx,"notes",v)} placeholder="Additional notes..." rows={2}/></Field>}{tpl.id==="speedo-qnd"&&<div style={{fontSize:11,fontWeight:400,color:C.g70,fontFamily:ff,padding:"2px 2px",lineHeight:1.5}}>Hero, heading, body and CTA feed the Speedo QND layout. Product tiles are chosen in the email builder.</div>}
                 </div>
               </div>
               {/* Footer */}
