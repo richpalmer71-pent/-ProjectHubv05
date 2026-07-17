@@ -61,9 +61,9 @@ export default function FeedbackCentre({ jobNum, brand, title }) {
     </Card>
 
     <Card>
-      <div style={{fontSize:11,...hd,color:C.g50,fontFamily:ff,marginBottom:7}}>YOUR EMAIL ADDRESS <span style={{color:"#ef4444"}}>*</span></div>
-      <input value={userEmail} onChange={e=>{setUserEmail(e.target.value);setEmailError(false);}} placeholder="name@company.com" style={{...bi,borderColor:emailError?"#ef4444":undefined}}/>
-      {emailError&&<div style={{fontSize:11,color:"#ef4444",fontFamily:ff,marginTop:4}}>Please enter a valid email address before submitting.</div>}
+      <div style={{fontSize:11,...hd,color:C.g50,fontFamily:ff,marginBottom:7}}>YOUR EMAIL ADDRESS <span style={{color:"#FF6B6B"}}>*</span></div>
+      <input value={userEmail} onChange={e=>{setUserEmail(e.target.value);setEmailError(false);}} placeholder="name@company.com" style={{...bi,borderColor:emailError?"#FF6B6B":undefined}}/>
+      {emailError&&<div style={{fontSize:11,color:"#FF6B6B",fontFamily:ff,marginTop:4}}>Please enter a valid email address before submitting.</div>}
     </Card>
 
     <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>

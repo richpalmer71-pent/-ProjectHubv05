@@ -85,7 +85,7 @@ export default function ResourceManagement({ profiles, addUser, updateProfile, j
       <div style={{ display:"grid", gridTemplateColumns:"repeat(4, 1fr)", gap:12 }}>
         <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:C.black,fontFamily:ff}}>{profiles.length}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>TOTAL USERS</div></Card>
         <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:C.green,fontFamily:ff}}>{complete}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>COMPLETE</div></Card>
-        <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:incomplete>0?"#f59e0b":C.g70,fontFamily:ff}}>{incomplete}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>INCOMPLETE</div></Card>
+        <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{fontSize:26,fontWeight:700,color:incomplete>0?"#FFD93D":C.g70,fontFamily:ff}}>{incomplete}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>INCOMPLETE</div></Card>
         <Card style={{padding:"16px 18px",textAlign:"center"}}><div style={{display:"flex",justifyContent:"center",gap:4,marginBottom:4}}>{DEPARTMENTS.map(d=><div key={d} style={{width:8,height:8,borderRadius:4,background:DEPT_COLORS[d]}}/>)}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:8}}>DEPARTMENTS</div></Card>
       </div>
       <Card style={{padding:"14px 20px"}}>

@@ -4,33 +4,29 @@ import ResourceManagement from "./components/ResourceManagement";
 import AssetDelivery from "./components/AssetDelivery";
 import FeedbackCentre from "./components/FeedbackCentre";
 import Dashboard from "./components/Dashboard";
+import EmailBuilder from "./components/EmailBuilder";
 import { C, ff, hd, bd, bi, rad, g, LOCALES, DEFAULT_PROFILES, LANG, tx, ICN, MODULES, Card, Field, Input, TextArea, Chip, CG, EmailSelect, Sec, CT, PageTitle, Sidebar, RESPONSIVE_CSS, sendNotification, ProjectActions, SaveBar, PasswordGate, BriefStatusSelect, BRIEF_STATUSES } from "./components/shared";
 import { saveProject, loadProject, loadProjects, saveToolkit, loadToolkit, saveWebAssets, loadWebAssets, saveEmailAssets, loadEmailAssets, savePaidMedia, loadPaidMedia, loadProfiles as dbLoadProfiles, saveProfile as dbSaveProfile, purgeDatabase, loadDemoData } from "./supabase";
 
 const PAID_SIZE_GROUPS = {"PMAX / PPC":["1200x300","1200x628","1200x1200","960x1200","300x300"],"PAID SOCIAL":["1080x1080","1080x1350","1080x1920"],"DISPLAY":["728x90","970x250","300x250","160x600","300x600"],"AFFILIATES":["336x280","320x50"]};
 const EMAIL_TYPES = ["Launch","Product","Promo","Community"];
-// Email templates — each defines which brief fields the layout uses.
-const EMAIL_TEMPLATES = [
-  { id:"speedo-qnd", name:"Speedo QND", fields:["subjectLine","preHeader","heroImage","heading","bodyCopy","cta"] },
-  { id:"standard", name:"Standard (all fields)", fields:["subjectLine","preHeader","heroImage","heading","bodyCopy","cta","secondaryCta","notes"] },
-];
 const WEB_PLACEMENTS = ["Homepage","PLP","PDP","Other"];
 const BANNER_TYPES = ["Full Size Hero","Slim Banners","Secondary Banners","Other"];
 const defaultWebPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",name:"",heroImage:"",heading:"",subcopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:""});
 const defaultWebCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",parts:[defaultWebPart("UK (ENG)")],activeTab:0,collapsed:false});
-const defaultEmailPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",subjectLine:"",preHeader:"",heroImage:"",heading:"",bodyCopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:""});
-const defaultEmailCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",sendDate:"",handoverDate:"",template:"speedo-qnd",parts:[defaultEmailPart("UK (ENG)")],activeTab:0,collapsed:false});
+const defaultEmailPart=(locale)=>({id:Date.now()+Math.random(),locale:locale||"",briefStatus:"brief_added",subjectLine:"",preHeader:"",heroImage:"",heading:"",bodyCopy:"",cta:"",secondaryCta:"",notes:"",figmaLink:"",builderTemplate:"speedo-qnd",builderImages:{},builderHeroHeight:700});
+const defaultEmailCard=(num)=>({id:Date.now()+Math.random(),num:num||1,name:"",sendDate:"",handoverDate:"",parts:[defaultEmailPart("UK (ENG)")],activeTab:0,collapsed:false});
 
 export default function App(){
   const [copyState,setCopyState]=useState({});
-  const CopyBriefLink=({emailNum,locale})=>{const loc=locale?localeShort(locale):`P1`;const ref=`E${String(emailNum).padStart(2,"0")}-${loc}`;const url=`https://pentland-hub.vercel.app/brief/PEN-0000/${ref}`;const k=emailNum+"-"+loc;const copied=copyState[k];const doCopy=()=>{navigator.clipboard.writeText(url).then(()=>{setCopyState(s=>({...s,[k]:true}));setTimeout(()=>setCopyState(s=>({...s,[k]:false})),2000);}).catch(()=>{});};return(<button onClick={doCopy} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",border:`1px solid ${copied?C.green+"66":C.g88}`,...rad,background:copied?C.green+"18":C.card,color:copied?C.green:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>{copied?"COPIED!":"COPY BRIEF LINK"}</button>);};
+  const CopyBriefLink=({emailNum,locale})=>{const loc=locale?localeShort(locale):`P1`;const ref=`E${String(emailNum).padStart(2,"0")}-${loc}`;const url=`https://chaos-lab.vercel.app/brief/PEN-0000/${ref}`;const k=emailNum+"-"+loc;const copied=copyState[k];const doCopy=()=>{navigator.clipboard.writeText(url).then(()=>{setCopyState(s=>({...s,[k]:true}));setTimeout(()=>setCopyState(s=>({...s,[k]:false})),2000);}).catch(()=>{});};return(<button onClick={doCopy} style={{display:"flex",alignItems:"center",gap:6,padding:"8px 14px",border:`1px solid ${copied?C.green+"66":C.g88}`,...rad,background:copied?C.green+"18":C.card,color:copied?C.green:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer",transition:"all 0.2s",whiteSpace:"nowrap"}}><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>{copied?"COPIED!":"COPY BRIEF LINK"}</button>);};
   const [sec,setSec]=useState({channels:false,web:false,email:false,paid:false});
   const tog=k=>setSec(s=>({...s,[k]:!s[k]}));
   const [dbxStatus,setDbxStatus]=useState(null); // null | "creating" | "done" | "error"
   const [dbxFolder,setDbxFolder]=useState("");
   const [dbxCreated,setDbxCreated]=useState(false);
   const isRealJobNum=(jn)=>jn&&!jn.startsWith("NEW-")&&jn.trim().length>=3;
-  const createDropboxFolders=async(jn,proj,br)=>{if(!jn||dbxStatus==="creating")return;setDbxStatus("creating");const folderName=`${jn}${proj?" — "+proj:""}`;setDbxFolder(folderName);try{await fetch("https://hooks.zapier.com/hooks/catch/26763385/uxi2iim/",{method:"POST",body:JSON.stringify({job_number:jn,project_name:proj||"",brand:br||"",created_by:"hub@pentland.com",folder_name:folderName})});setDbxStatus("done");setDbxCreated(true);setTimeout(()=>setDbxStatus(null),8000);}catch(e){setDbxStatus("error");setTimeout(()=>setDbxStatus(null),5000);}};
+  const createDropboxFolders=async(jn,proj,br)=>{if(!jn||dbxStatus==="creating")return;setDbxStatus("creating");const folderName=`${jn}${proj?" — "+proj:""}`;setDbxFolder(folderName);try{await fetch("https://hooks.zapier.com/hooks/catch/26763385/uxi2iim/",{method:"POST",body:JSON.stringify({job_number:jn,project_name:proj||"",brand:br||"",created_by:"hub@chaos-lab.com",folder_name:folderName})});setDbxStatus("done");setDbxCreated(true);setTimeout(()=>setDbxStatus(null),8000);}catch(e){setDbxStatus("error");setTimeout(()=>setDbxStatus(null),5000);}};
   const [profiles,setProfiles]=useState(DEFAULT_PROFILES);
   const addUser=(newUser)=>{if(typeof newUser==="string"){if(profiles.find(p=>p.email===newUser))return;setProfiles(p=>[...p,{firstName:"",lastName:"",email:newUser,jobTitle:"",department:""}]);}else{if(profiles.find(p=>p.email===newUser.email))return;setProfiles(p=>[...p,{...newUser,jobTitle:newUser.jobTitle||"",department:newUser.department||""}]);}};
   const updateProfile=(email,updates)=>setProfiles(p=>p.map(u=>u.email===email?{...u,...updates}:u));
@@ -40,30 +36,38 @@ export default function App(){
   const [objective,setObj]=useState(""); const [locales,setLoc]=useState([]); const [sd,setSd]=useState(""); const [ed,setEd]=useState(""); const [hd2,setHd2]=useState("");
   const [tkTitle,setTkTitle]=useState(""); const [damLink,setDam]=useState(""); const [abLink,setAb]=useState(""); const [dFiles,setDf]=useState(""); const [cpTk,setCpTk]=useState(""); const [bGuid,setBg]=useState("");
   const [ch,setCh]=useState([]);
-  const [wp,setWp]=useState([]); const [wbt,setWbt]=useState([]); const [webAssets,setWebAssets]=useState([defaultWebCard(1)]); const [webOwner,setWebOwner]=useState("");
-  const addWA=()=>setWebAssets(a=>[...a,defaultWebCard(a.length+1)]);
-  const rmWA=id=>setWebAssets(a=>{const f=a.filter(w=>w.id!==id);return f.map((w,i)=>({...w,num:i+1}));});
-  const upWeb=(id,field,val)=>setWebAssets(a=>a.map(w=>w.id===id?{...w,[field]:val}:w));
-  const upWebPart=(webId,partIdx,field,val)=>setWebAssets(a=>a.map(w=>{if(w.id!==webId)return w;const np=w.parts.map((p,i)=>i===partIdx?{...p,[field]:val}:p);return{...w,parts:np};}));
-  const addWebPart=async(webId,locale)=>{const newPartId=Date.now()+Math.random();const w=webAssets.find(x=>x.id===webId);if(!w)return;const src=w.parts[w.activeTab]||w.parts[0];const np={...src,id:newPartId,locale,briefStatus:"brief_added",figmaLink:""};setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;return{...w2,parts:[...w2.parts,np],activeTab:w2.parts.length,collapsed:false};}));if(LANG[locale]){const t=await tx({name:src.name,heading:src.heading,subcopy:src.subcopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;const updatedParts=w2.parts.map(p=>p.id===newPartId?{...p,...t}:p);return{...w2,parts:updatedParts};}));}};
-  const removeWebPart=(webId,partIdx)=>{setWebAssets(a=>a.map(w=>{if(w.id!==webId||w.parts.length<=1)return w;const np=w.parts.filter((_,i)=>i!==partIdx);const na=w.activeTab>=np.length?np.length-1:w.activeTab>partIdx?w.activeTab-1:w.activeTab;return{...w,parts:np,activeTab:na};}));};
-  const dupWeb=(web)=>{const num=webAssets.length+1;const clone={...web,id:Date.now()+Math.random(),num,parts:web.parts.map(p=>({...p,id:Date.now()+Math.random()})),activeTab:0,collapsed:false};setWebAssets(a=>[...a,clone]);};
+  const [wp,setWp]=useState([]); const [wbt,setWbt]=useState([]); const [webAssets,setWebAssets]=useState([defaultWebCard(1)]); const [webOwner,setWebOwnerRaw]=useState("");
+  const setWebOwner=v=>{setWebOwnerRaw(v);markDirty("brief");};
+  const addWA=()=>{setWebAssets(a=>[...a,defaultWebCard(a.length+1)]);markDirty("brief");};
+  const rmWA=id=>{setWebAssets(a=>{const f=a.filter(w=>w.id!==id);return f.map((w,i)=>({...w,num:i+1}));});markDirty("brief");};
+  const upWeb=(id,field,val)=>{setWebAssets(a=>a.map(w=>w.id===id?{...w,[field]:val}:w));markDirty("brief");};
+  const upWebPart=(webId,partIdx,field,val)=>{setWebAssets(a=>a.map(w=>{if(w.id!==webId)return w;const np=w.parts.map((p,i)=>i===partIdx?{...p,[field]:val}:p);return{...w,parts:np};}));markDirty("brief");};
+  const addWebPart=async(webId,locale)=>{markDirty("brief");const newPartId=Date.now()+Math.random();const w=webAssets.find(x=>x.id===webId);if(!w)return;const src=w.parts[w.activeTab]||w.parts[0];const np={...src,id:newPartId,locale,briefStatus:"brief_added",figmaLink:""};setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;return{...w2,parts:[...w2.parts,np],activeTab:w2.parts.length,collapsed:false};}));if(LANG[locale]){const t=await tx({name:src.name,heading:src.heading,subcopy:src.subcopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;const updatedParts=w2.parts.map(p=>p.id===newPartId?{...p,...t}:p);return{...w2,parts:updatedParts};}));}};
+  const removeWebPart=(webId,partIdx)=>{setWebAssets(a=>a.map(w=>{if(w.id!==webId||w.parts.length<=1)return w;const np=w.parts.filter((_,i)=>i!==partIdx);const na=w.activeTab>=np.length?np.length-1:w.activeTab>partIdx?w.activeTab-1:w.activeTab;return{...w,parts:np,activeTab:na};}));markDirty("brief");};
+  const dupWeb=(web)=>{const num=webAssets.length+1;const clone={...web,id:Date.now()+Math.random(),num,parts:web.parts.map(p=>({...p,id:Date.now()+Math.random()})),activeTab:0,collapsed:false};setWebAssets(a=>[...a,clone]);markDirty("brief");};
   const changeWebPartLocale=async(webId,partIdx,newLocale)=>{const w=webAssets.find(x=>x.id===webId);if(!w)return;const part=w.parts[partIdx];const partId=part.id;upWebPart(webId,partIdx,"locale",newLocale);if(LANG[newLocale]){const t=await tx({name:part.name,heading:part.heading,subcopy:part.subcopy,cta:part.cta,secondaryCta:part.secondaryCta,notes:part.notes},newLocale);setWebAssets(a=>a.map(w2=>{if(w2.id!==webId)return w2;const updatedParts=w2.parts.map(p=>p.id===partId?{...p,...t}:p);return{...w2,parts:updatedParts};}));}};
   const [showWebLocalePicker,setShowWebLocalePicker]=useState(null);
-  const [et,setEt]=useState([]); const [emails,setEmails]=useState([defaultEmailCard(1)]); const [emailOwner,setEmailOwner]=useState(""); const [emailSort,setEmailSort]=useState("asc");
-  const addE=()=>setEmails(e=>[...e,defaultEmailCard(e.length+1)]);
-  const rmE=id=>setEmails(e=>{const f=e.filter(em=>em.id!==id);return f.map((em,i)=>({...em,num:i+1}));});
-  const upEmail=(id,field,val)=>setEmails(e=>e.map(em=>em.id===id?{...em,[field]:val}:em));
-  const upEmailPart=(emailId,partIdx,field,val)=>setEmails(e=>e.map(em=>{if(em.id!==emailId)return em;const np=em.parts.map((p,i)=>i===partIdx?{...p,[field]:val}:p);return{...em,parts:np};}));
-  const addEmailPart=async(emailId,locale)=>{const newPartId=Date.now()+Math.random();const em=emails.find(x=>x.id===emailId);if(!em)return;const src=em.parts[em.activeTab]||em.parts[0];const np={...src,id:newPartId,locale,briefStatus:"brief_added",figmaLink:""};setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;return{...em2,parts:[...em2.parts,np],activeTab:em2.parts.length,collapsed:false};}));if(LANG[locale]){const t=await tx({subjectLine:src.subjectLine,preHeader:src.preHeader,heading:src.heading,bodyCopy:src.bodyCopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;const updatedParts=em2.parts.map(p=>p.id===newPartId?{...p,...t}:p);return{...em2,parts:updatedParts};}));}};
-  const removeEmailPart=(emailId,partIdx)=>{setEmails(e=>e.map(em=>{if(em.id!==emailId||em.parts.length<=1)return em;const np=em.parts.filter((_,i)=>i!==partIdx);const na=em.activeTab>=np.length?np.length-1:em.activeTab>partIdx?em.activeTab-1:em.activeTab;return{...em,parts:np,activeTab:na};}));};
-  const dupEmail=(email)=>{const num=emails.length+1;const clone={...email,id:Date.now()+Math.random(),num,parts:email.parts.map(p=>({...p,id:Date.now()+Math.random()})),activeTab:0,collapsed:false};setEmails(e=>[...e,clone]);};
+  const [et,setEt]=useState([]); const [emails,setEmails]=useState([defaultEmailCard(1)]); const [emailOwner,setEmailOwnerRaw]=useState(""); const [emailSort,setEmailSort]=useState("asc");
+  const setEmailOwner=v=>{setEmailOwnerRaw(v);markDirty("brief");};
+  const addE=()=>{setEmails(e=>[...e,defaultEmailCard(e.length+1)]);markDirty("brief");};
+  const rmE=id=>{setEmails(e=>{const f=e.filter(em=>em.id!==id);return f.map((em,i)=>({...em,num:i+1}));});markDirty("brief");};
+  const upEmail=(id,field,val)=>{setEmails(e=>e.map(em=>em.id===id?{...em,[field]:val}:em));markDirty("brief");};
+  const upEmailPart=(emailId,partIdx,field,val)=>{setEmails(e=>e.map(em=>{if(em.id!==emailId)return em;const np=em.parts.map((p,i)=>i===partIdx?{...p,[field]:val}:p);return{...em,parts:np};}));markDirty("brief");};
+  const addEmailPart=async(emailId,locale)=>{markDirty("brief");const newPartId=Date.now()+Math.random();const em=emails.find(x=>x.id===emailId);if(!em)return;const src=em.parts[em.activeTab]||em.parts[0];const np={...src,id:newPartId,locale,briefStatus:"brief_added",figmaLink:""};setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;return{...em2,parts:[...em2.parts,np],activeTab:em2.parts.length,collapsed:false};}));if(LANG[locale]){const t=await tx({subjectLine:src.subjectLine,preHeader:src.preHeader,heading:src.heading,bodyCopy:src.bodyCopy,cta:src.cta,secondaryCta:src.secondaryCta,notes:src.notes},locale);setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;const updatedParts=em2.parts.map(p=>p.id===newPartId?{...p,...t}:p);return{...em2,parts:updatedParts};}));}};
+  const removeEmailPart=(emailId,partIdx)=>{setEmails(e=>e.map(em=>{if(em.id!==emailId||em.parts.length<=1)return em;const np=em.parts.filter((_,i)=>i!==partIdx);const na=em.activeTab>=np.length?np.length-1:em.activeTab>partIdx?em.activeTab-1:em.activeTab;return{...em,parts:np,activeTab:na};}));markDirty("brief");};
+  const dupEmail=(email)=>{const num=emails.length+1;const clone={...email,id:Date.now()+Math.random(),num,parts:email.parts.map(p=>({...p,id:Date.now()+Math.random()})),activeTab:0,collapsed:false};setEmails(e=>[...e,clone]);markDirty("brief");};
   const sortedEmails=[...emails].sort((a,b)=>{const da=a.sendDate||"9999-12-31";const db=b.sendDate||"9999-12-31";return emailSort==="asc"?da.localeCompare(db):db.localeCompare(da);});
   const localeShort=l=>{if(!l)return"";if(l.includes("UK"))return"UK";if(l.includes("US"))return"US";if(l.includes("CAN (FR)"))return"CAN-FR";if(l.includes("CAN"))return"CAN";if(l.includes("DE"))return"DE";if(l.includes("FR (FR)"))return"FR";return l;};
   const changePartLocale=async(emailId,partIdx,newLocale)=>{const em=emails.find(x=>x.id===emailId);if(!em)return;const part=em.parts[partIdx];const partId=part.id;upEmailPart(emailId,partIdx,"locale",newLocale);if(LANG[newLocale]){const t=await tx({subjectLine:part.subjectLine,preHeader:part.preHeader,heading:part.heading,bodyCopy:part.bodyCopy,cta:part.cta,secondaryCta:part.secondaryCta,notes:part.notes},newLocale);setEmails(e=>e.map(em2=>{if(em2.id!==emailId)return em2;const updatedParts=em2.parts.map(p=>p.id===partId?{...p,...t}:p);return{...em2,parts:updatedParts};}));}};
   const [showLocalePicker,setShowLocalePicker]=useState(null);
-  const [ps,setPs]=useState({}); const [os,setOs]=useState(""); const [phi,setPhi]=useState(""); const [pc,setPc]=useState(""); const [pv,setPv]=useState(""); const [paidOwner,setPaidOwner]=useState("");
-  const tps=(gr,sz)=>setPs(p=>{const a=p[gr]||[];return{...p,[gr]:a.includes(sz)?a.filter(s=>s!==sz):[...a,sz]};});
+  const [ps,setPsRaw]=useState({}); const [os,setOsRaw]=useState(""); const [phi,setPhiRaw]=useState(""); const [pc,setPcRaw]=useState(""); const [pv,setPvRaw]=useState(""); const [paidOwner,setPaidOwnerRaw]=useState("");
+  const setPs=v=>{setPsRaw(v);markDirty("brief");};
+  const setOs=v=>{setOsRaw(v);markDirty("brief");};
+  const setPhi=v=>{setPhiRaw(v);markDirty("brief");};
+  const setPc=v=>{setPcRaw(v);markDirty("brief");};
+  const setPv=v=>{setPvRaw(v);markDirty("brief");};
+  const setPaidOwner=v=>{setPaidOwnerRaw(v);markDirty("brief");};
+  const tps=(gr,sz)=>{setPs(p=>{const a=p[gr]||[];return{...p,[gr]:a.includes(sz)?a.filter(s=>s!==sz):[...a,sz]};});};
   const [dl,setDl]=useState(""); const [cl,setCl]=useState(""); const [crl,setCrl]=useState(""); const [pl,setPl]=useState("");
   const [pdl,setPdl]=useState(""); const [pcl,setPcl]=useState(""); const [pcrl,setPcrl]=useState(""); const [ppl,setPpl]=useState(""); const [pfa,setPfa]=useState("");
   const [es,setEs]=useState(null); const [ho,setHo]=useState("");
@@ -95,10 +99,31 @@ export default function App(){
     }
   };
 
+  // AUTOSAVE — background save, debounced, whenever a module goes dirty.
+  // Removes the need to remember to hit "Save Changes" before navigating
+  // away, closing a card, or switching projects.
+  useEffect(()=>{
+    const dirtyMods=Object.keys(modDirty).filter(m=>modDirty[m]);
+    if(dirtyMods.length===0)return;
+    const t=setTimeout(()=>{dirtyMods.forEach(m=>saveModule(m));},1500);
+    return ()=>clearTimeout(t);
+  },[modDirty]);
+
+  // Belt-and-braces: warn if the tab is closed mid-debounce, before the
+  // autosave above has had its 1.5s to fire.
+  useEffect(()=>{
+    const anyDirty=Object.values(modDirty).some(Boolean);
+    if(!anyDirty)return;
+    const handler=e=>{e.preventDefault();e.returnValue="";};
+    window.addEventListener("beforeunload",handler);
+    return ()=>window.removeEventListener("beforeunload",handler);
+  },[modDirty]);
+
   // LOAD FROM DATABASE
   const loadFromDb=useCallback(async(jn)=>{
     if(!jn)return false;
     setDbLoading(true);
+    setModDirty({});setModSaved({});
     const proj=await loadProject(jn);
     if(!proj){setDbLoading(false);return false;}
     // Populate state from database
@@ -120,7 +145,7 @@ export default function App(){
     else{setEmails([defaultEmailCard(1)]);}
     // Load paid media
     const pm=await loadPaidMedia(proj.id);
-    if(pm){setPs(pm.sizes||{});setOs(pm.other_sizes||"");setPhi(pm.hero_image||"");setPc(pm.copy_requirements||"");setPv(pm.video_content||"");setPaidOwner(pm.owner||"");}
+    if(pm){setPsRaw(pm.sizes||{});setOsRaw(pm.other_sizes||"");setPhiRaw(pm.hero_image||"");setPcRaw(pm.copy_requirements||"");setPvRaw(pm.video_content||"");setPaidOwnerRaw(pm.owner||"");}
     // Load profiles
     const profs=await dbLoadProfiles();
     if(profs&&profs.length>0){setProfiles(profs.map(p=>({email:p.email,firstName:p.first_name,lastName:p.last_name,jobTitle:p.job_title,department:p.department})));}
@@ -150,8 +175,8 @@ export default function App(){
       setAdminMsg("DEMO MODE LOADED");setTimeout(()=>setAdminMsg(null),3000);
     }else{
       // Fallback to in-memory demo if database fails
-      setJobNum("PEN-2025-0042");setBrand("Speedo");setTitle("Summer 25 Launch");
-      setObj("Drive awareness and sales for the Summer 2025 Speedo collection across all digital channels.");
+      setJobNum("PEN-2025-0042");setBrand("VortexSwim");setTitle("Summer 25 Launch");
+      setObj("Drive awareness and sales for the Summer 2025 VortexSwim collection across all digital channels.");
       setLoc(["UK (ENG)","DE (GER)","FR (FR)"]);setSd("2025-03-01");setEd("2025-06-15");setHd2("2025-05-20");
       setCh(["web","email","paid"]);
       setView("project");setShowAdmin(false);
@@ -166,7 +191,7 @@ export default function App(){
     window.location.reload();
   };
   const [pwError,setPwError]=useState(false);
-  const GATE_PW = "pentlandhub";
+  const GATE_PW = "chaoslab";
   const checkPw = () => { if(pwInput===GATE_PW){setAuthed(true);setPwError(false);setPwInput("");}else{setPwError(true);} };
   const handleProjectAction=(action)=>{
     if(action==="pause"){setProjectStatus("paused");setActionMsg("PROJECT PAUSED");}
@@ -187,7 +212,7 @@ export default function App(){
       <style>{GS}</style>
       <div style={{maxWidth:520,width:"100%",padding:28}}>
         <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{fontSize:11,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em",marginBottom:4}}>PENTLAND C&C</div>
+          <div style={{fontSize:11,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em",marginBottom:4}}>CHAOS-LAB</div>
           <div style={{fontSize:26,...hd,color:C.black,fontFamily:ff,letterSpacing:"0.03em"}}>PROJECT HUB</div>
           <p style={{fontSize:14,color:C.g50,fontFamily:ff,marginTop:8,...bd}}>End-to-end project tracking from conception to delivery.</p>
         </div>
@@ -234,27 +259,27 @@ export default function App(){
           </button>
 
           {/* Purge */}
-          {purgeStep===0&&<button onClick={()=>setPurgeStep(1)} style={{width:"100%",padding:"14px 20px",border:"1px solid #ef444444",...rad,background:"#ef444412",color:"#ef4444",fontSize:12,...hd,fontFamily:ff,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          {purgeStep===0&&<button onClick={()=>setPurgeStep(1)} style={{width:"100%",padding:"14px 20px",border:"1px solid #FF6B6B44",...rad,background:"#FF6B6B12",color:"#FF6B6B",fontSize:12,...hd,fontFamily:ff,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
             PURGE SYSTEM
           </button>}
 
-          {purgeStep===1&&<div style={{padding:"16px 20px",border:"1px solid #ef444444",...rad,background:"#ef444408"}}>
-            <div style={{fontSize:13,...hd,color:"#ef4444",fontFamily:ff,marginBottom:8}}>ARE YOU SURE?</div>
+          {purgeStep===1&&<div style={{padding:"16px 20px",border:"1px solid #FF6B6B44",...rad,background:"#FF6B6B08"}}>
+            <div style={{fontSize:13,...hd,color:"#FF6B6B",fontFamily:ff,marginBottom:8}}>ARE YOU SURE?</div>
             <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff,marginBottom:14,lineHeight:1.5}}>This will permanently delete all project data, briefs, profiles and settings. This cannot be undone.</div>
             <div style={{display:"flex",gap:8}}>
-              <button onClick={()=>setPurgeStep(2)} style={{flex:1,padding:"10px",border:"none",...rad,background:"#ef4444",color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>YES, CONTINUE</button>
+              <button onClick={()=>setPurgeStep(2)} style={{flex:1,padding:"10px",border:"none",...rad,background:"#FF6B6B",color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>YES, CONTINUE</button>
               <button onClick={()=>{setPurgeStep(0);setPurgePw("");setPurgeError(false);}} style={{flex:1,padding:"10px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>CANCEL</button>
             </div>
           </div>}
 
-          {purgeStep===2&&<div style={{padding:"16px 20px",border:"1px solid #ef444444",...rad,background:"#ef444408"}}>
-            <div style={{fontSize:13,...hd,color:"#ef4444",fontFamily:ff,marginBottom:8}}>ENTER ADMIN PASSWORD</div>
+          {purgeStep===2&&<div style={{padding:"16px 20px",border:"1px solid #FF6B6B44",...rad,background:"#FF6B6B08"}}>
+            <div style={{fontSize:13,...hd,color:"#FF6B6B",fontFamily:ff,marginBottom:8}}>ENTER ADMIN PASSWORD</div>
             <div style={{display:"flex",gap:8}}>
-              <input type="password" value={purgePw} onChange={e=>{setPurgePw(e.target.value);setPurgeError(false);}} onKeyDown={e=>{if(e.key==="Enter"){if(purgePw==="pentlandhub"){purgeAll();}else{setPurgeError(true);}}}} placeholder="Admin password" style={{...bi,flex:1,border:purgeError?"1px solid #ef4444":`1px solid ${C.g88}`}}/>
-              <button onClick={()=>{if(purgePw==="pentlandhub"){purgeAll();}else{setPurgeError(true);}}} style={{padding:"10px 20px",border:"none",...rad,background:"#ef4444",color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>PURGE</button>
+              <input type="password" value={purgePw} onChange={e=>{setPurgePw(e.target.value);setPurgeError(false);}} onKeyDown={e=>{if(e.key==="Enter"){if(purgePw==="chaoslab"){purgeAll();}else{setPurgeError(true);}}}} placeholder="Admin password" style={{...bi,flex:1,border:purgeError?"1px solid #FF6B6B":`1px solid ${C.g88}`}}/>
+              <button onClick={()=>{if(purgePw==="chaoslab"){purgeAll();}else{setPurgeError(true);}}} style={{padding:"10px 20px",border:"none",...rad,background:"#FF6B6B",color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>PURGE</button>
             </div>
-            {purgeError&&<div style={{fontSize:11,...hd,color:"#ef4444",fontFamily:ff,marginTop:8}}>INCORRECT PASSWORD</div>}
+            {purgeError&&<div style={{fontSize:11,...hd,color:"#FF6B6B",fontFamily:ff,marginTop:8}}>INCORRECT PASSWORD</div>}
             <button onClick={()=>{setPurgeStep(0);setPurgePw("");setPurgeError(false);}} style={{marginTop:8,padding:"6px 14px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>CANCEL</button>
           </div>}
         </div>}
@@ -272,7 +297,7 @@ export default function App(){
       <div style={{maxWidth:1100,margin:"0 auto",padding:"32px 28px 60px"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:24}}>
           <div>
-            <div style={{fontSize:10,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em",marginBottom:4}}>PENTLAND C&C</div>
+            <div style={{fontSize:10,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em",marginBottom:4}}>CHAOS-LAB</div>
             <div style={{fontSize:24,...hd,color:C.black,fontFamily:ff,letterSpacing:"0.03em"}}>PROJECT DASHBOARD</div>
           </div>
           <button onClick={()=>setView("landing")} style={{padding:"10px 20px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,fontSize:12,fontWeight:500,color:C.g50}}>BACK TO HUB</button>
@@ -288,7 +313,7 @@ export default function App(){
       <style>{GS}</style>
       <div style={{maxWidth:520,width:"100%",padding:28}}>
         <div style={{textAlign:"center",marginBottom:32}}>
-          <div style={{fontSize:11,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em",marginBottom:4}}>PENTLAND C&C</div>
+          <div style={{fontSize:11,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em",marginBottom:4}}>CHAOS-LAB</div>
           <div style={{fontSize:26,...hd,color:C.black,fontFamily:ff,letterSpacing:"0.03em"}}>PROJECT HUB</div>
         </div>
         {adminMsg&&<div style={{marginBottom:14,padding:"10px 18px",background:adminMsg.includes("PURGE")?C.red:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{adminMsg}</div>}
@@ -304,11 +329,11 @@ export default function App(){
           <div style={{fontSize:20,fontWeight:700,color:C.black,fontFamily:ff}}>{jobNum}</div>
         </Card>
         {/* Dropbox Folder Status */}
-        {dbxStatus&&<Card style={{marginBottom:10,padding:"12px 20px",borderLeft:`4px solid ${dbxStatus==="done"?C.green:dbxStatus==="error"?"#ef4444":C.blue}`}}>
+        {dbxStatus&&<Card style={{marginBottom:10,padding:"12px 20px",borderLeft:`4px solid ${dbxStatus==="done"?C.green:dbxStatus==="error"?"#FF6B6B":C.blue}`}}>
           <div style={{display:"flex",alignItems:"center",gap:10}}>
             {dbxStatus==="creating"&&<><div style={{width:14,height:14,border:`2px solid ${C.g88}`,borderTop:`2px solid ${C.blue}`,borderRadius:"50%",animation:"dbxspin 0.8s linear infinite"}}/><span style={{fontSize:11,...bd,color:C.blue,fontFamily:ff}}>Creating Dropbox folders...</span><style>{`@keyframes dbxspin{to{transform:rotate(360deg)}}`}</style></>}
             {dbxStatus==="done"&&<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span style={{fontSize:11,...bd,color:C.green,fontFamily:ff}}>Dropbox folders created</span></>}
-            {dbxStatus==="error"&&<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style={{fontSize:11,...bd,color:"#ef4444",fontFamily:ff}}>Failed — check Zapier</span><button onClick={()=>createDropboxFolders(jobNum,title,brand)} style={{marginLeft:8,padding:"4px 12px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:9,...hd,fontFamily:ff,cursor:"pointer"}}>RETRY</button></>}
+            {dbxStatus==="error"&&<><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style={{fontSize:11,...bd,color:"#FF6B6B",fontFamily:ff}}>Failed — check Zapier</span><button onClick={()=>createDropboxFolders(jobNum,title,brand)} style={{marginLeft:8,padding:"4px 12px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:9,...hd,fontFamily:ff,cursor:"pointer"}}>RETRY</button></>}
           </div>
         </Card>}
         {!dbxStatus&&isRealJobNum(jobNum)&&<Card style={{marginBottom:10,padding:"12px 20px"}}>
@@ -329,10 +354,10 @@ export default function App(){
             </button>
           );})}
         </div>
-        {actionMsg&&<div style={{marginTop:14,padding:"10px 18px",background:projectStatus==="cancelled"?"#ef4444":projectStatus==="paused"?"#f59e0b":projectStatus==="archived"?C.g50:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{actionMsg}</div>}
-        {projectStatus!=="active"&&<div style={{marginTop:14,padding:"12px 18px",border:`1px solid ${projectStatus==="cancelled"?"#ef444433":projectStatus==="paused"?"#f59e0b33":C.g88}`,...rad,background:C.card,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
-          <div style={{width:8,height:8,borderRadius:4,background:projectStatus==="cancelled"?"#ef4444":projectStatus==="paused"?"#f59e0b":C.g50}}/>
-          <span style={{fontSize:12,...hd,color:projectStatus==="cancelled"?"#ef4444":projectStatus==="paused"?"#f59e0b":C.g50,fontFamily:ff}}>PROJECT {projectStatus.toUpperCase()}</span>
+        {actionMsg&&<div style={{marginTop:14,padding:"10px 18px",background:projectStatus==="cancelled"?"#FF6B6B":projectStatus==="paused"?"#FFD93D":projectStatus==="archived"?C.g50:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{actionMsg}</div>}
+        {projectStatus!=="active"&&<div style={{marginTop:14,padding:"12px 18px",border:`1px solid ${projectStatus==="cancelled"?"#FF6B6B33":projectStatus==="paused"?"#FFD93D33":C.g88}`,...rad,background:C.card,display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+          <div style={{width:8,height:8,borderRadius:4,background:projectStatus==="cancelled"?"#FF6B6B":projectStatus==="paused"?"#FFD93D":C.g50}}/>
+          <span style={{fontSize:12,...hd,color:projectStatus==="cancelled"?"#FF6B6B":projectStatus==="paused"?"#FFD93D":C.g50,fontFamily:ff}}>PROJECT {projectStatus.toUpperCase()}</span>
         </div>}
         <div style={{marginTop:20}}><ProjectActions onAction={handleProjectAction} projectStatus={projectStatus}/></div>
         <button onClick={()=>setView("dashboard")} style={{width:"100%",marginTop:10,padding:"12px 18px",border:`1px solid ${C.g88}`,...rad,background:C.panel,cursor:"pointer",fontFamily:ff,display:"flex",alignItems:"center",justifyContent:"center",gap:8}}>
@@ -349,10 +374,10 @@ export default function App(){
       <style>{GS}</style>
       <Sidebar view={view} setView={setView} jobNum={jobNum} open={sidebarOpen} setOpen={setSidebarOpen}/>
       <div className="main-content" style={{marginLeft:250,padding:"32px 40px 60px"}}>
-        {actionMsg&&<div style={{marginBottom:16,padding:"10px 18px",background:projectStatus==="cancelled"?"#ef4444":projectStatus==="paused"?"#f59e0b":projectStatus==="archived"?C.g50:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{actionMsg}</div>}
-        {projectStatus!=="active"&&<div style={{marginBottom:16,padding:"12px 18px",border:`1px solid ${projectStatus==="cancelled"?"#ef444433":projectStatus==="paused"?"#f59e0b33":C.g88}`,...rad,background:C.card,display:"flex",alignItems:"center",gap:10}}>
-          <div style={{width:8,height:8,borderRadius:4,background:projectStatus==="cancelled"?"#ef4444":projectStatus==="paused"?"#f59e0b":C.g50}}/>
-          <span style={{fontSize:12,...hd,color:projectStatus==="cancelled"?"#ef4444":projectStatus==="paused"?"#f59e0b":C.g50,fontFamily:ff}}>THIS PROJECT IS {projectStatus.toUpperCase()}</span>
+        {actionMsg&&<div style={{marginBottom:16,padding:"10px 18px",background:projectStatus==="cancelled"?"#FF6B6B":projectStatus==="paused"?"#FFD93D":projectStatus==="archived"?C.g50:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{actionMsg}</div>}
+        {projectStatus!=="active"&&<div style={{marginBottom:16,padding:"12px 18px",border:`1px solid ${projectStatus==="cancelled"?"#FF6B6B33":projectStatus==="paused"?"#FFD93D33":C.g88}`,...rad,background:C.card,display:"flex",alignItems:"center",gap:10}}>
+          <div style={{width:8,height:8,borderRadius:4,background:projectStatus==="cancelled"?"#FF6B6B":projectStatus==="paused"?"#FFD93D":C.g50}}/>
+          <span style={{fontSize:12,...hd,color:projectStatus==="cancelled"?"#FF6B6B":projectStatus==="paused"?"#FFD93D":C.g50,fontFamily:ff}}>THIS PROJECT IS {projectStatus.toUpperCase()}</span>
           {projectStatus==="paused"&&<button onClick={()=>handleProjectAction("resume")} style={{marginLeft:"auto",padding:"6px 14px",border:"none",...rad,background:C.green,color:C.card,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>RESUME</button>}
         </div>}
         <PageTitle title={label} sub={sub} accent={accent} onMenu={()=>setSidebarOpen(true)}/>
@@ -366,7 +391,7 @@ export default function App(){
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
       <Card>
         <div style={{fontSize:11,...hd,color:C.g50,fontFamily:ff,marginBottom:16}}>PROJECT DETAILS</div>
-        <div className="hub-grid-3" style={g(3)}><Field label="JOB NUMBER" required><Input value={jobNum} onChange={v=>{setJobNum(v);markDirty("overview");}} placeholder="e.g. PEN-001"/></Field><Field label="BRAND" required><Input value={brand} onChange={v=>{setBrand(v);markDirty("overview");}} placeholder="e.g. Speedo"/></Field><Field label="CAMPAIGN TITLE" required><Input value={title} onChange={v=>{setTitle(v);markDirty("overview");}} placeholder="e.g. Summer 25"/></Field></div>
+        <div className="hub-grid-3" style={g(3)}><Field label="JOB NUMBER" required><Input value={jobNum} onChange={v=>{setJobNum(v);markDirty("overview");}} placeholder="e.g. PEN-001"/></Field><Field label="BRAND" required><Input value={brand} onChange={v=>{setBrand(v);markDirty("overview");}} placeholder="e.g. VortexSwim"/></Field><Field label="CAMPAIGN TITLE" required><Input value={title} onChange={v=>{setTitle(v);markDirty("overview");}} placeholder="e.g. Summer 25"/></Field></div>
         <div style={{marginTop:16}}><Field label="CAMPAIGN OBJECTIVE" required><TextArea value={objective} onChange={v=>{setObj(v);markDirty("overview");}} placeholder="What is this campaign trying to achieve?"/></Field></div>
       </Card>
       <Card>
@@ -384,7 +409,7 @@ export default function App(){
               <div style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>DROPBOX PROJECT FOLDER</div>
               {dbxStatus==="creating"&&<div style={{display:"flex",alignItems:"center",gap:6,marginTop:4}}><div style={{width:12,height:12,border:`2px solid ${C.g88}`,borderTop:`2px solid ${C.blue}`,borderRadius:"50%",animation:"dbxspin 0.8s linear infinite"}}/><span style={{fontSize:11,...bd,color:C.blue,fontFamily:ff}}>Creating folder structure for <strong>{dbxFolder}</strong>...</span><style>{`@keyframes dbxspin{to{transform:rotate(360deg)}}`}</style></div>}
               {dbxStatus==="done"&&<div style={{fontSize:11,...bd,color:C.green,fontFamily:ff,marginTop:4}}>Folders created for <strong>{dbxFolder}</strong></div>}
-              {dbxStatus==="error"&&<div style={{fontSize:11,...bd,color:"#ef4444",fontFamily:ff,marginTop:4}}>Failed to create folders — check your Zapier connection</div>}
+              {dbxStatus==="error"&&<div style={{fontSize:11,...bd,color:"#FF6B6B",fontFamily:ff,marginTop:4}}>Failed to create folders — check your Zapier connection</div>}
               {!dbxStatus&&!dbxCreated&&<div style={{fontSize:11,...bd,color:C.g70,fontFamily:ff,marginTop:4}}>{isRealJobNum(jobNum)?"Ready to create project folders in Dropbox":"Enter a real job number above, then create your Dropbox folders"}</div>}
               {!dbxStatus&&dbxCreated&&<div style={{fontSize:11,...bd,color:C.g50,fontFamily:ff,marginTop:4}}>Folders exist for <strong style={{color:C.black}}>{dbxFolder}</strong></div>}
             </div>
@@ -445,11 +470,11 @@ export default function App(){
   return ML("MULTI-CHANNEL HUB","PROJECT BRIEF",C.red,
     <div style={{display:"flex",flexDirection:"column",gap:14,paddingBottom:80}}>
       {/* Dropbox Status */}
-      {dbxStatus&&<Card style={{padding:"14px 24px",borderLeft:`4px solid ${dbxStatus==="done"?C.green:dbxStatus==="error"?"#ef4444":C.blue}`}}>
+      {dbxStatus&&<Card style={{padding:"14px 24px",borderLeft:`4px solid ${dbxStatus==="done"?C.green:dbxStatus==="error"?"#FF6B6B":C.blue}`}}>
         <div style={{display:"flex",alignItems:"center",gap:10}}>
           {dbxStatus==="creating"&&<><div style={{width:16,height:16,border:`2px solid ${C.g88}`,borderTop:`2px solid ${C.blue}`,borderRadius:"50%",animation:"dbxspin 0.8s linear infinite"}}/><span style={{fontSize:12,...bd,color:C.blue,fontFamily:ff}}>Creating Dropbox folder structure for <strong>{dbxFolder}</strong>...</span><style>{`@keyframes dbxspin{to{transform:rotate(360deg)}}`}</style></>}
           {dbxStatus==="done"&&<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={C.green} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span style={{fontSize:12,...bd,color:C.green,fontFamily:ff}}>Dropbox folders created for <strong>{dbxFolder}</strong></span></>}
-          {dbxStatus==="error"&&<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style={{fontSize:12,...bd,color:"#ef4444",fontFamily:ff}}>Failed to create Dropbox folders — check your Zapier connection</span><button onClick={()=>createDropboxFolders(jobNum,title,brand)} style={{marginLeft:8,padding:"5px 14px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>RETRY</button></>}
+          {dbxStatus==="error"&&<><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span style={{fontSize:12,...bd,color:"#FF6B6B",fontFamily:ff}}>Failed to create Dropbox folders — check your Zapier connection</span><button onClick={()=>createDropboxFolders(jobNum,title,brand)} style={{marginLeft:8,padding:"5px 14px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>RETRY</button></>}
         </div>
       </Card>}
       {/* Manual Dropbox Button */}
@@ -586,7 +611,7 @@ export default function App(){
             <button onClick={()=>setEmailSort("desc")} style={{padding:"6px 12px",border:`1px solid ${emailSort==="desc"?C.black:C.g88}`,...rad,background:emailSort==="desc"?C.black:C.card,color:emailSort==="desc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>LATEST</button>
           </div>
         </div>
-        {sortedEmails.map(em=>{const numStr=String(em.num).padStart(2,"0");const titleDisplay=`${numStr}${em.name?` — ${em.name}`:""}`;const ap=em.parts[em.activeTab]||em.parts[0];const tabIdx=em.activeTab;const tpl=EMAIL_TEMPLATES.find(t=>t.id===(em.template||"speedo-qnd"))||EMAIL_TEMPLATES[0];const tf=f=>tpl.fields.includes(f);const completeParts=em.parts.filter(p=>p.briefStatus==="complete").length;const dateRange=(em.sendDate||em.handoverDate)?`${em.sendDate||"—"} → ${em.handoverDate||"—"}`:"No dates set";return(<div key={em.id} style={{marginBottom:12}}>
+        {sortedEmails.map(em=>{const numStr=String(em.num).padStart(2,"0");const titleDisplay=`${numStr}${em.name?` — ${em.name}`:""}`;const ap=em.parts[em.activeTab]||em.parts[0];const tabIdx=em.activeTab;const completeParts=em.parts.filter(p=>p.briefStatus==="complete").length;const dateRange=(em.sendDate||em.handoverDate)?`${em.sendDate||"—"} → ${em.handoverDate||"—"}`:"No dates set";return(<div key={em.id} style={{marginBottom:12}}>
           <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden"}}>
             {/* Collapsed Header */}
             <div onClick={()=>upEmail(em.id,"collapsed",!em.collapsed)} style={{padding:"16px 22px",background:"#D8DBE0",cursor:"pointer",userSelect:"none"}}>
@@ -594,7 +619,7 @@ export default function App(){
                 <div style={{display:"flex",alignItems:"center",gap:12,flex:1,minWidth:0}}>
                   <div style={{width:4,height:28,...rad,background:C.yellow,flexShrink:0}}/>
                   <span style={{fontSize:15,...hd,color:C.black,fontFamily:ff,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{titleDisplay||numStr}</span>
-                  {em.parts.length>1&&<span style={{padding:"2px 8px",...rad,background:C.yellow+"33",color:"#92400e",fontSize:9,...hd,fontFamily:ff,flexShrink:0}}>{em.parts.length} VARIANTS</span>}
+                  {em.parts.length>1&&<span style={{padding:"2px 8px",...rad,background:C.yellow+"33",color:C.yellow,fontSize:9,...hd,fontFamily:ff,flexShrink:0}}>{em.parts.length} VARIANTS</span>}
                 </div>
                 <div style={{display:"flex",alignItems:"center",gap:12,flexShrink:0}}>
                   <span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{dateRange}</span>
@@ -614,7 +639,6 @@ export default function App(){
                   </div>
                   <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>SEND DATE</label><input type="date" value={em.sendDate} onChange={e=>upEmail(em.id,"sendDate",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:140}}/></div>
                   <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>HANDOVER DATE</label><input type="date" value={em.handoverDate} onChange={e=>upEmail(em.id,"handoverDate",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:140}}/></div>
-                  <div><label style={{display:"block",fontSize:9,...hd,color:C.g50,fontFamily:ff,marginBottom:4}}>TEMPLATE</label><select value={em.template||"speedo-qnd"} onChange={e=>upEmail(em.id,"template",e.target.value)} style={{...bi,fontSize:12,padding:"8px 10px",width:180,cursor:"pointer"}}>{EMAIL_TEMPLATES.map(t=><option key={t.id} value={t.id}>{t.name}</option>)}</select></div>
                 </div>
               </div>
               {/* Tabs */}
@@ -645,14 +669,34 @@ export default function App(){
                   </div>)}
                   <CopyBriefLink emailNum={em.num} locale={ap.locale}/>
                 </div>
-                {/* Form */}
-                <div style={{display:"flex",flexDirection:"column",gap:12}}>
-                  <div className="hub-grid-2" style={g(2)}>{tf("subjectLine")&&<Field label="SUBJECT LINE"><Input value={ap.subjectLine} onChange={v=>upEmailPart(em.id,tabIdx,"subjectLine",v)} placeholder="Subject line"/></Field>}{tf("preHeader")&&<Field label="PRE-HEADER"><Input value={ap.preHeader} onChange={v=>upEmailPart(em.id,tabIdx,"preHeader",v)} placeholder="Preview text"/></Field>}</div>
-                  {tf("heroImage")&&<Field label="HERO IMAGE (LINK)"><Input value={ap.heroImage} onChange={v=>upEmailPart(em.id,tabIdx,"heroImage",v)} placeholder="https://..."/></Field>}
-                  {tf("heading")&&<Field label="MAIN HEADING"><Input value={ap.heading} onChange={v=>upEmailPart(em.id,tabIdx,"heading",v)} placeholder="Main headline"/></Field>}
-                  {tf("bodyCopy")&&<Field label="BODY COPY"><TextArea value={ap.bodyCopy} onChange={v=>upEmailPart(em.id,tabIdx,"bodyCopy",v)} placeholder="Body copy..." rows={3}/></Field>}
-                  {(tf("cta")&&tf("secondaryCta"))?(<div className="hub-grid-2" style={g(2)}><Field label="PRIMARY CTA"><Input value={ap.cta} onChange={v=>upEmailPart(em.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={ap.secondaryCta} onChange={v=>upEmailPart(em.id,tabIdx,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>):(tf("cta")?<Field label="PRIMARY CTA"><Input value={ap.cta} onChange={v=>upEmailPart(em.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field>:null)}
-                  {tf("notes")&&<Field label="NOTES"><TextArea value={ap.notes} onChange={v=>upEmailPart(em.id,tabIdx,"notes",v)} placeholder="Additional notes..." rows={2}/></Field>}{tpl.id==="speedo-qnd"&&<div style={{fontSize:11,fontWeight:400,color:C.g70,fontFamily:ff,padding:"2px 2px",lineHeight:1.5}}>Hero, heading, body and CTA feed the Speedo QND layout. Product tiles are chosen in the email builder.</div>}
+                {/* Form + Builder */}
+                <div style={{display:"flex",gap:24,alignItems:"flex-start",flexWrap:"wrap"}}>
+                  <div style={{display:"flex",flexDirection:"column",gap:12,flex:1,minWidth:320}}>
+                    <div className="hub-grid-2" style={g(2)}><Field label="SUBJECT LINE"><Input value={ap.subjectLine} onChange={v=>upEmailPart(em.id,tabIdx,"subjectLine",v)} placeholder="Subject line"/></Field><Field label="PRE-HEADER"><Input value={ap.preHeader} onChange={v=>upEmailPart(em.id,tabIdx,"preHeader",v)} placeholder="Preview text"/></Field></div>
+                    <Field label="HERO IMAGE (LINK)"><Input value={ap.heroImage} onChange={v=>upEmailPart(em.id,tabIdx,"heroImage",v)} placeholder="https://..."/></Field>
+                    <Field label="MAIN HEADING"><Input value={ap.heading} onChange={v=>upEmailPart(em.id,tabIdx,"heading",v)} placeholder="Main headline"/></Field>
+                    <Field label="BODY COPY"><TextArea value={ap.bodyCopy} onChange={v=>upEmailPart(em.id,tabIdx,"bodyCopy",v)} placeholder="Body copy..." rows={3}/></Field>
+                    <div className="hub-grid-2" style={g(2)}><Field label="PRIMARY CTA"><Input value={ap.cta} onChange={v=>upEmailPart(em.id,tabIdx,"cta",v)} placeholder="e.g. Shop Now"/></Field><Field label="SECONDARY CTA"><Input value={ap.secondaryCta} onChange={v=>upEmailPart(em.id,tabIdx,"secondaryCta",v)} placeholder="e.g. Learn More"/></Field></div>
+                    <Field label="NOTES"><TextArea value={ap.notes} onChange={v=>upEmailPart(em.id,tabIdx,"notes",v)} placeholder="Additional notes..." rows={2}/></Field>
+                  </div>
+                  <div style={{position:"sticky",top:20,maxHeight:"calc(100vh - 100px)",overflowY:"auto",padding:"12px 40px 40px 4px",margin:"-12px -40px -40px -4px"}}>
+                    <EmailBuilder
+                      templateId={ap.builderTemplate||"speedo-qnd"}
+                      onTemplateChange={v=>upEmailPart(em.id,tabIdx,"builderTemplate",v)}
+                      heading={ap.heading}
+                      subheading={ap.bodyCopy}
+                      cta={ap.cta}
+                      secondaryCta={ap.secondaryCta}
+                      heroImage={ap.heroImage}
+                      onHeroImage={v=>upEmailPart(em.id,tabIdx,"heroImage",v)}
+                      heroHeight={ap.builderHeroHeight||700}
+                      onHeroHeightChange={v=>upEmailPart(em.id,tabIdx,"builderHeroHeight",v)}
+                      gridImages={ap.builderImages||{}}
+                      onGridImagesChange={v=>upEmailPart(em.id,tabIdx,"builderImages",v)}
+                      subjectLine={ap.subjectLine}
+                      preHeader={ap.preHeader}
+                    />
+                  </div>
                 </div>
               </div>
               {/* Footer */}
@@ -721,6 +765,9 @@ export default function App(){
 
       <div className="brief-footer" style={{position:"fixed",bottom:0,left:250,right:0,background:"rgba(236,238,241,0.96)",backdropFilter:"blur(10px)",borderTop:`1px solid ${C.g88}`,padding:"12px 40px",display:"flex",alignItems:"center",justifyContent:"flex-end",gap:10,zIndex:100}}>
         {es&&<div style={{position:"absolute",top:-40,left:"50%",transform:"translateX(-50%)",background:C.black,color:C.card,padding:"6px 16px",...rad,fontSize:11,...hd,fontFamily:ff,animation:"fu .2s ease"}}>{es==="handed"?"BRIEF SUBMITTED":"CHANGES SAVED"}</div>}
+        <div style={{marginRight:"auto",display:"flex",alignItems:"center",gap:6,fontSize:11,...bd,color:C.g50,fontFamily:ff}}>
+          {modDirty.brief?<><div style={{width:6,height:6,borderRadius:3,background:C.yellow}}/>Saving…</>:modSaved.brief?<><div style={{width:6,height:6,borderRadius:3,background:C.green}}/>All changes saved</>:null}
+        </div>
         <button onClick={async()=>{setEs("saved");setTimeout(()=>setEs(null),3000);await saveModule("brief");setShowNotifyModal(true);}} style={{padding:"11px 24px",border:"none",...rad,background:C.black,color:C.card,fontSize:13,...hd,fontFamily:ff,cursor:"pointer"}}>SAVE CHANGES</button>
         <button onClick={()=>{setEs("handed");setTimeout(()=>setEs(null),3000);}} style={{padding:"11px 24px",border:`1px solid ${C.g88}`,...rad,background:C.card,color:C.g50,fontSize:13,...hd,fontFamily:ff,cursor:"pointer"}}>SUBMIT BRIEF</button>
       </div>

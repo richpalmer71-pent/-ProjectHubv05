@@ -29,7 +29,7 @@ export default function AssetDelivery() {
       <div style={{fontSize:11,...hd,color:C.g50,fontFamily:ff,marginBottom:16}}>REPOSITORIES</div>
       <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:16}}>
         <Field label="DROPBOX REPOSITORY"><Input value={dropbox} onChange={setDropbox} placeholder="https://dropbox.com/..."/></Field>
-        <Field label="DAM LINK"><Input value={dam} onChange={setDam} placeholder="https://dam.pentland.com/..."/></Field>
+        <Field label="DAM LINK"><Input value={dam} onChange={setDam} placeholder="https://dam.chaos-lab.com/..."/></Field>
       </div>
     </Card>
 

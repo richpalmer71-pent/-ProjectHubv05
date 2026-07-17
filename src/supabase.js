@@ -156,7 +156,6 @@ export async function saveEmailAssets(projectId, assets) {
     parts: a.parts || [],
     active_tab: a.activeTab || 0,
     owner: a.owner || '',
-    template: a.template || 'speedo-qnd',
   }));
   const { data, error } = await supabase.from('email_assets').insert(rows).select();
   if (error) { console.error('saveEmailAssets error:', error); return []; }
@@ -241,8 +240,8 @@ export async function purgeDatabase() {
   await supabase.from('profiles').delete().gt('created_at', f.value);
   // Re-insert default profiles
   await supabase.from('profiles').upsert([
-    { email: 'richard.palmer@pentland.com', first_name: 'Richard', last_name: 'Palmer', job_title: 'Digital Designer', department: 'Digital' },
-    { email: 'farah.yousaf@pentland.com', first_name: 'Farah', last_name: 'Yousaf', job_title: 'Digital Marketing Manager', department: 'Digital' },
+    { email: 'richard.palmer@chaos-lab.com', first_name: 'Richard', last_name: 'Palmer', job_title: 'Digital Designer', department: 'Digital' },
+    { email: 'farah.yousaf@chaos-lab.com', first_name: 'Farah', last_name: 'Yousaf', job_title: 'Digital Marketing Manager', department: 'Digital' },
   ], { onConflict: 'email' });
   return true;
 }
@@ -255,9 +254,9 @@ export async function loadDemoData() {
   // Create demo project
   const project = await saveProject({
     job_number: 'PEN-2025-0042',
-    brand: 'Speedo',
+    brand: 'VortexSwim',
     title: 'Summer 25 Launch',
-    objective: 'Drive awareness and sales for the Summer 2025 Speedo collection across all digital channels.',
+    objective: 'Drive awareness and sales for the Summer 2025 VortexSwim collection across all digital channels.',
     locales: ['UK (ENG)', 'DE (GER)', 'FR (FR)'],
     start_date: '2025-03-01',
     end_date: '2025-06-15',
@@ -271,11 +270,11 @@ export async function loadDemoData() {
   // Toolkit
   await saveToolkit(project.id, {
     toolkit_title: 'SS25 Digital Toolkit',
-    dam_link: 'https://dam.pentland.com/speedo-ss25',
-    asset_bank_link: 'https://assetbank.pentland.com/speedo',
+    dam_link: 'https://dam.chaos-lab.com/speedo-ss25',
+    asset_bank_link: 'https://assetbank.chaos-lab.com/speedo',
     design_files: 'https://figma.com/speedo-ss25',
     copy_toolkit: 'On-brand tone of voice. Active, confident, inclusive.',
-    brand_guidelines: 'Follow Speedo brand guidelines v4.2',
+    brand_guidelines: 'Follow VortexSwim brand guidelines v1.0',
   });
 
   // Web assets
@@ -291,7 +290,7 @@ export async function loadDemoData() {
   // Email assets
   await saveEmailAssets(project.id, [
     { name: 'Launch Email', sendDate: '2025-06-01', handoverDate: '2025-05-20', collapsed: false, activeTab: 0, parts: [
-      { id: 3, locale: 'UK (ENG)', briefStatus: 'awaiting_approval', subjectLine: 'Make Waves This Summer', preHeader: 'New Speedo collection is here', heroImage: '', heading: 'Dive Into Summer 25', bodyCopy: 'Our latest collection combines cutting-edge technology with bold design.', cta: 'Shop Now', secondaryCta: 'Explore', notes: '', figmaLink: '' }
+      { id: 3, locale: 'UK (ENG)', briefStatus: 'awaiting_approval', subjectLine: 'Make Waves This Summer', preHeader: 'New VortexSwim collection is here', heroImage: '', heading: 'Dive Into Summer 25', bodyCopy: 'Our latest collection combines cutting-edge technology with bold design.', cta: 'Shop Now', secondaryCta: 'Explore', notes: '', figmaLink: '' }
     ]},
     { name: 'Promo Follow-Up', sendDate: '2025-06-10', handoverDate: '2025-05-28', collapsed: true, activeTab: 0, parts: [
       { id: 4, locale: 'UK (ENG)', briefStatus: 'with_copy', subjectLine: "Don't Miss Out", preHeader: '', heroImage: '', heading: 'Summer Essentials', bodyCopy: 'Get ready for the season with our top picks.', cta: 'Shop Now', secondaryCta: '', notes: '', figmaLink: '' }
@@ -302,7 +301,7 @@ export async function loadDemoData() {
   await savePaidMedia(project.id, {
     sizes: { 'PMAX / PPC': ['1200x628', '1200x1200'], 'PAID SOCIAL': ['1080x1080', '1080x1350'] },
     other_sizes: '',
-    hero_image: 'https://dam.pentland.com/speedo-hero.jpg',
+    hero_image: 'https://dam.chaos-lab.com/speedo-hero.jpg',
     copy_requirements: 'Bold headlines, active lifestyle messaging. CTAs: Shop Now, Explore.',
     video_content: '15s product showcase for social.',
   });

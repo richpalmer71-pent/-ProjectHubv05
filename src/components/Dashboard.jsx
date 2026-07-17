@@ -10,35 +10,35 @@ function useIsMobile(bp=768) {
 const PROJECT_STATUSES = [
   {key:"draft",label:"DRAFT",color:C.g70},
   {key:"briefing",label:"BRIEFING",color:C.blue},
-  {key:"in_progress",label:"IN PROGRESS",color:"#f59e0b"},
-  {key:"review",label:"REVIEW",color:"#8b5cf6"},
+  {key:"in_progress",label:"IN PROGRESS",color:"#FFD93D"},
+  {key:"review",label:"REVIEW",color:"#C084FC"},
   {key:"approved",label:"APPROVED",color:C.green},
   {key:"delivered",label:"DELIVERED",color:C.black},
-  {key:"overdue",label:"OVERDUE",color:"#ef4444"},
+  {key:"overdue",label:"OVERDUE",color:"#FF6B6B"},
 ];
 
 const CHANNELS = ["Web","Email","Paid"];
-const CHANNEL_COLORS = { Web:C.red, Email:"#f59e0b", Paid:C.blue };
+const CHANNEL_COLORS = { Web:C.red, Email:"#FFD93D", Paid:C.blue };
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const TODAY = new Date().toISOString().slice(0,10);
 
 const MOCK_PROJECTS = [
-  { id:"PEN-2025-0042",brand:"Speedo",title:"Summer 25 Launch",status:"in_progress",start:"2025-03-01",end:"2026-06-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
+  { id:"PEN-2025-0042",brand:"VortexSwim",title:"Summer 25 Launch",status:"in_progress",start:"2025-03-01",end:"2026-06-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
     briefs:[{id:"W01",channel:"Web",name:"Homepage Hero Banner",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PLP Category Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W03",channel:"Web",name:"Homepage Hero Banner",locale:"DE (GER)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-06-01",handoverDate:"2025-05-20"},{id:"E02",channel:"Email",name:"Promo Follow-Up",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf",sendDate:"2025-06-10",handoverDate:"2025-05-28"},{id:"E03",channel:"Email",name:"Launch Email",locale:"FR (FR)",status:"brief_added",assignedTo:"",sendDate:"2025-06-01",handoverDate:"2025-05-20"},{id:"P01",channel:"Paid",name:"PMAX 1200x628",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2025-0038",brand:"Berghaus",title:"AW25 Digital Campaign",status:"review",start:"2025-02-15",end:"2026-04-30",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
+  { id:"PEN-2025-0038",brand:"Apex Trail",title:"AW25 Digital Campaign",status:"review",start:"2025-02-15",end:"2026-04-30",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
     briefs:[{id:"W01",channel:"Web",name:"Hero Banner — AW25",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PDP Feature Block",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"AW25 Teaser Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-03-15",handoverDate:"2025-03-01"},{id:"E02",channel:"Email",name:"AW25 Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-04-01",handoverDate:"2025-03-18"},{id:"P01",channel:"Paid",name:"Display 728x90",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"}]},
-  { id:"PEN-2025-0035",brand:"Canterbury",title:"Six Nations Promo",status:"delivered",start:"2025-01-10",end:"2025-03-20",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
+  { id:"PEN-2025-0035",brand:"Impact80",title:"Six Nations Promo",status:"delivered",start:"2025-01-10",end:"2025-03-20",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
     briefs:[{id:"W01",channel:"Web",name:"Six Nations Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Builder CTA",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Match Day Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-02-10",handoverDate:"2025-01-28"},{id:"P01",channel:"Paid",name:"Social 1080x1920",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
-  { id:"PEN-2025-0031",brand:"Speedo",title:"Fastskin Launch",status:"in_progress",start:"2025-01-05",end:"2025-12-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Fastskin PDP Hero",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Technology Explainer",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Pre-Launch Teaser",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-08-01",handoverDate:"2025-07-18"},{id:"E02",channel:"Email",name:"Launch Day Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"E03",channel:"Email",name:"Launch Day Email",locale:"DE (GER)",status:"with_copy",assignedTo:"",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"P01",channel:"Paid",name:"PMAX 1200x300",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Display 300x250",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2025-0029",brand:"Ellesse",title:"SS25 Social Push",status:"briefing",start:"2025-03-10",end:"2026-07-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},
+  { id:"PEN-2025-0031",brand:"VortexSwim",title:"SecondSkin Launch",status:"in_progress",start:"2025-01-05",end:"2025-12-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
+    briefs:[{id:"W01",channel:"Web",name:"SecondSkin PDP Hero",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Technology Explainer",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Pre-Launch Teaser",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-08-01",handoverDate:"2025-07-18"},{id:"E02",channel:"Email",name:"Launch Day Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"E03",channel:"Email",name:"Launch Day Email",locale:"DE (GER)",status:"with_copy",assignedTo:"",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"P01",channel:"Paid",name:"PMAX 1200x300",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Display 300x250",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
+  { id:"PEN-2025-0029",brand:"CAMPIONATO",title:"SS25 Social Push",status:"briefing",start:"2025-03-10",end:"2026-07-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},
     briefs:[{id:"W01",channel:"Web",name:"Homepage Takeover",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"P01",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"P02",channel:"Paid",name:"Social 1080x1920",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2024-0112",brand:"Berghaus",title:"Winter 24 Wrap-Up",status:"delivered",start:"2024-09-01",end:"2024-12-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
+  { id:"PEN-2024-0112",brand:"Apex Trail",title:"Winter 24 Wrap-Up",status:"delivered",start:"2024-09-01",end:"2024-12-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
     briefs:[{id:"W01",channel:"Web",name:"Winter Sale Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Winter Sale Launch",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2024-11-01",handoverDate:"2024-10-18"},{id:"E02",channel:"Email",name:"Last Chance Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2024-12-05",handoverDate:"2024-11-22"},{id:"P01",channel:"Paid",name:"Display 970x250",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
-  { id:"PEN-2025-0044",brand:"Mitre",title:"Grassroots Kit Launch",status:"draft",start:"2025-04-01",end:"2026-08-01",owner:"",modules:{overview:false,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},briefs:[]},
-  { id:"PEN-2025-0048",brand:"Ellesse",title:"Heritage Collection",status:"review",start:"2025-06-01",end:"2026-01-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
+  { id:"PEN-2025-0044",brand:"Full90",title:"Grassroots Kit Launch",status:"draft",start:"2025-04-01",end:"2026-08-01",owner:"",modules:{overview:false,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},briefs:[]},
+  { id:"PEN-2025-0048",brand:"CAMPIONATO",title:"Heritage Collection",status:"review",start:"2025-06-01",end:"2026-01-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
     briefs:[{id:"W01",channel:"Web",name:"Heritage Landing Page",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Heritage Landing Page",locale:"FR (FR)",status:"with_copy",assignedTo:""},{id:"E01",channel:"Email",name:"Heritage Launch Email",locale:"UK (ENG)",status:"with_design",assignedTo:"Farah Yousaf",sendDate:"2025-09-01",handoverDate:"2025-08-15"},{id:"P01",channel:"Paid",name:"PMAX 1200x1200",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1350",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2025-0050",brand:"Canterbury",title:"Lions Tour Kit",status:"in_progress",start:"2025-05-01",end:"2026-03-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:false,resources:true,approval:false,delivery:false,feedback:false},
+  { id:"PEN-2025-0050",brand:"Impact80",title:"Lions Tour Kit",status:"in_progress",start:"2025-05-01",end:"2026-03-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:false,resources:true,approval:false,delivery:false,feedback:false},
     briefs:[{id:"W01",channel:"Web",name:"Lions Hero Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Customiser CTA",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Lions Announcement",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf",sendDate:"2025-07-01",handoverDate:"2025-06-15"},{id:"P01",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
 ];
 
@@ -72,7 +72,7 @@ function AvatarTooltip({ name }) {
 function StatusBadge({status}) {
   const s=PROJECT_STATUSES.find(x=>x.key===status)||PROJECT_STATUSES[0];
   return <span style={{padding:"4px 12px",...rad,background:s.color+"18",color:s.color,fontSize:10,...hd,fontFamily:ff,whiteSpace:"nowrap",display:"inline-flex",alignItems:"center",gap:4}}>
-    {status==="overdue"&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
+    {status==="overdue"&&<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#FF6B6B" strokeWidth="2.5" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>}
     {s.label}
   </span>;
 }
@@ -85,8 +85,8 @@ function ProgressBar({modules}) {
 function DaysLabel({end, status}) {
   if(status==="delivered") return <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>COMPLETE</span>;
   const diff=Math.ceil((new Date(end)-new Date(TODAY))/86400000);
-  if(diff<0) return <span style={{fontSize:10,...hd,color:"#ef4444",fontFamily:ff}}>{Math.abs(diff)}d OVERDUE</span>;
-  if(diff<=14) return <span style={{fontSize:10,...hd,color:"#f59e0b",fontFamily:ff}}>{diff}d LEFT</span>;
+  if(diff<0) return <span style={{fontSize:10,...hd,color:"#FF6B6B",fontFamily:ff}}>{Math.abs(diff)}d OVERDUE</span>;
+  if(diff<=14) return <span style={{fontSize:10,...hd,color:"#FFD93D",fontFamily:ff}}>{diff}d LEFT</span>;
   return <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>{diff}d LEFT</span>;
 }
 
@@ -137,7 +137,7 @@ function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
       <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
         <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:C.black,fontFamily:ff}}>{totalBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>TOTAL BRIEFS</div></div>
         <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:C.green,fontFamily:ff}}>{completeBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>COMPLETE</div></div>
-        <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:totalBriefs-completeBriefs>0?"#f59e0b":C.g70,fontFamily:ff}}>{totalBriefs-completeBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>IN PROGRESS</div></div>
+        <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:totalBriefs-completeBriefs>0?"#FFD93D":C.g70,fontFamily:ff}}>{totalBriefs-completeBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>IN PROGRESS</div></div>
         <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><div style={{flex:1,maxWidth:80,height:6,background:C.g88,...rad,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:pct===100?C.green:C.blue,...rad}}/></div><span style={{fontSize:14,fontWeight:700,color:pct===100?C.green:C.black,fontFamily:ff}}>{pct}%</span></div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>BRIEF PROGRESS</div></div>
       </div>
     </Card>
@@ -250,7 +250,7 @@ export default function Dashboard({ setView, setJobNum }) {
         <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.black,fontFamily:ff}}>{stats.total}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>TOTAL</div></Card>
         <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.blue,fontFamily:ff}}>{stats.active}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>ACTIVE</div></Card>
         <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.green,fontFamily:ff}}>{stats.delivered}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>DELIVERED</div></Card>
-        <Card style={{padding:"14px 16px",textAlign:"center",border:stats.overdue>0?"1px solid #ef444433":`1px solid ${C.g88}`}}><div style={{fontSize:mob?22:26,fontWeight:700,color:stats.overdue>0?"#ef4444":C.g70,fontFamily:ff}}>{stats.overdue}</div><div style={{fontSize:9,...hd,color:stats.overdue>0?"#ef4444":C.g70,fontFamily:ff,marginTop:4}}>OVERDUE</div></Card>
+        <Card style={{padding:"14px 16px",textAlign:"center",border:stats.overdue>0?"1px solid #FF6B6B33":`1px solid ${C.g88}`}}><div style={{fontSize:mob?22:26,fontWeight:700,color:stats.overdue>0?"#FF6B6B":C.g70,fontFamily:ff}}>{stats.overdue}</div><div style={{fontSize:9,...hd,color:stats.overdue>0?"#FF6B6B":C.g70,fontFamily:ff,marginTop:4}}>OVERDUE</div></Card>
       </div>
 
       <Card style={{padding:"14px 16px"}}>

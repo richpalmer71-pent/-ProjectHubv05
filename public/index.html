@@ -1,2 +1,20 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Pentland C&C Project Hub</title></head><body><div id="root"></div></body></html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Chaos-Lab Project Hub</title>
+    <style>
+      /* Athletics — brand display face used inside rendered email templates.
+         Declared here (not via a webpack-processed CSS import) so the
+         /fonts/... paths resolve as plain static assets from /public. */
+      @font-face{font-family:'Athletics';src:url('%PUBLIC_URL%/fonts/Athletics-Regular.otf') format('opentype');font-weight:400;font-style:normal;font-display:swap;}
+      @font-face{font-family:'Athletics';src:url('%PUBLIC_URL%/fonts/Athletics-Medium.otf') format('opentype');font-weight:500;font-style:normal;font-display:swap;}
+      @font-face{font-family:'Athletics';src:url('%PUBLIC_URL%/fonts/Athletics-Bold.otf') format('opentype');font-weight:700;font-style:normal;font-display:swap;}
+      @font-face{font-family:'Athletics';src:url('%PUBLIC_URL%/fonts/Athletics-Black.otf') format('opentype');font-weight:900;font-style:normal;font-display:swap;}
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

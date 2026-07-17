@@ -1,16 +1,16 @@
 import { useState } from "react";
 
-// V5 Design Tokens
+// V6 Dark Mode Design Tokens
 export const C = {
-  bg:"#ECEEF1", panel:"#F6F7F9", card:"#FFFFFF", black:"#1A1D23",
-  red:"#ff7276", yellow:"#edf100", blue:"#05c3da", green:"#34d399",
-  g50:"#6B7280", g70:"#9CA3AF", g88:"#E5E7EB", g94:"#F3F4F6",
+  bg:"#0A0A0C", panel:"#121215", card:"#16161A", black:"#FFFFFF",
+  red:"#FF6B6B", yellow:"#FFD93D", blue:"#00D4FF", green:"#39F5A0",
+  g50:"#BBBBBB", g70:"#BBBBBB", g88:"#242428", g94:"#121215",
 };
 export const ff = "'Helvetica Neue',Helvetica,Arial,sans-serif";
 export const hd = { fontWeight:600, letterSpacing:"0.04em", textTransform:"uppercase" };
 export const bd = { fontWeight:400 };
 export const rad = { borderRadius:10 };
-export const bi = { width:"100%", boxSizing:"border-box", padding:"11px 14px", border:`1px solid ${C.g88}`, ...rad, fontSize:14, fontFamily:ff, color:C.black, background:C.card, outline:"none", transition:"border-color 0.2s, box-shadow 0.2s", ...bd };
+export const bi = { width:"100%", boxSizing:"border-box", padding:"11px 14px", border:`1px solid ${C.g88}`, ...rad, fontSize:14, fontFamily:ff, color:C.black, background:C.panel, outline:"none", transition:"border-color 0.2s, box-shadow 0.2s", ...bd };
 export const g = (cols) => ({ display:"grid", gridTemplateColumns:`repeat(${cols},1fr)`, gap:16 });
 
 export const LOCALES = ["UK (ENG)","US (ENG)","CAN (ENG)","CAN (FR)","DE (GER)","FR (FR)"];
@@ -22,16 +22,16 @@ export const DEPT_COLORS = { Creative:C.red, Marketing:C.yellow, Digital:C.blue,
 export const DEFAULT_AVATAR_COLOR = C.g70;
 
 export const DEFAULT_PROFILES = [
-  { firstName:"Richard", lastName:"Palmer", email:"richard.palmer@pentland.com", jobTitle:"Digital Artworker", department:"Digital" },
-  { firstName:"Farah", lastName:"Yousaf", email:"farah.yousaf@pentland.com", jobTitle:"Digital Asset Lead", department:"Digital" },
+  { firstName:"Richard", lastName:"Palmer", email:"richard.palmer@chaos-lab.com", jobTitle:"Digital Artworker", department:"Digital" },
+  { firstName:"Farah", lastName:"Yousaf", email:"farah.yousaf@chaos-lab.com", jobTitle:"Digital Asset Lead", department:"Digital" },
 ];
 
 // Brief Statuses
 export const BRIEF_STATUSES = [
   { key:"brief_added", label:"BRIEF ADDED", color:C.g70 },
   { key:"with_copy", label:"WITH COPY", color:C.blue },
-  { key:"with_design", label:"WITH DESIGN", color:"#8b5cf6" },
-  { key:"awaiting_approval", label:"AWAITING APPROVAL", color:"#f59e0b" },
+  { key:"with_design", label:"WITH DESIGN", color:"#C084FC" },
+  { key:"awaiting_approval", label:"AWAITING APPROVAL", color:C.yellow },
   { key:"handover", label:"HANDOVER", color:C.red },
   { key:"complete", label:"COMPLETE", color:C.green },
 ];
@@ -64,7 +64,7 @@ export const tx = async (fields, locale) => {
   for (const [key, val] of filled) {
     try {
       await new Promise(r=>setTimeout(r,300));
-      const r = await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(val.substring(0,500))+"&langpair=en|"+langCode+"&de=pentland@hub.com");
+      const r = await fetch("https://api.mymemory.translated.net/get?q="+encodeURIComponent(val.substring(0,500))+"&langpair=en|"+langCode+"&de=hub@chaos-lab.com");
       if(!r.ok) continue;
       const d = await r.json();
       if(d.responseData && d.responseData.translatedText && !d.responseData.translatedText.includes("MYMEMORY WARNING")) translated[key] = d.responseData.translatedText;
@@ -218,9 +218,9 @@ export const PageTitle = ({title, sub, accent, onMenu}) => (
 
 export function ProjectActions({onAction, projectStatus}) {
   const actions = [
-    {key:"pause",label:"PAUSE PROJECT",icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,color:"#f59e0b"},
+    {key:"pause",label:"PAUSE PROJECT",icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>,color:C.yellow},
     {key:"archive",label:"ARCHIVE PROJECT",icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg>,color:C.g50},
-    {key:"cancel",label:"CANCEL PROJECT",icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,color:"#ef4444"},
+    {key:"cancel",label:"CANCEL PROJECT",icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>,color:C.red},
   ];
   if(projectStatus==="paused") actions[0]={...actions[0],key:"resume",label:"RESUME PROJECT",icon:<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>,color:C.green};
   return (
@@ -262,7 +262,7 @@ export function Sidebar({view, setView, jobNum, open, setOpen}) {
     <div className={open?"sidebar sidebar-open":"sidebar"} style={{width:250,flexShrink:0,background:C.card,borderRight:`1px solid ${C.g88}`,display:"flex",flexDirection:"column",minHeight:"100vh",position:"fixed",left:0,top:0,bottom:0,zIndex:10,transition:"transform 0.25s ease"}}>
       <div style={{padding:"28px 22px 20px",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
         <div>
-          <div style={{fontSize:10,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em"}}>PENTLAND C&C</div>
+          <div style={{fontSize:10,...hd,color:C.red,fontFamily:ff,letterSpacing:"0.1em"}}>CHAOS-LAB</div>
           <div style={{fontSize:16,...hd,color:C.black,fontFamily:ff,marginTop:2,letterSpacing:"0.02em"}}>PROJECT HUB</div>
         </div>
         <button onClick={()=>setOpen(false)} className="mob-only" style={{padding:"4px 8px",border:"none",background:"transparent",cursor:"pointer",display:"none"}}>
@@ -319,9 +319,9 @@ export function Sidebar({view, setView, jobNum, open, setOpen}) {
 export function SaveBar({dirty, onSave, saved}) {
   return (
     <div style={{marginTop:20,position:"relative"}}>
-      {dirty&&!saved&&<div style={{marginBottom:10,padding:"10px 16px",background:"#fef3c7",border:"1px solid #f59e0b33",...rad,display:"flex",alignItems:"center",gap:8}}>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        <span style={{fontSize:12,fontWeight:500,color:"#92400e",fontFamily:ff}}>You have unsaved changes</span>
+      {dirty&&!saved&&<div style={{marginBottom:10,padding:"10px 16px",background:C.panel,border:`1px solid ${C.yellow}33`,...rad,display:"flex",alignItems:"center",gap:8}}>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#FFD93D" strokeWidth="2" strokeLinecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span style={{fontSize:12,fontWeight:500,color:C.yellow,fontFamily:ff}}>You have unsaved changes</span>
       </div>}
       {saved&&<div style={{position:"absolute",top:-40,left:"50%",transform:"translateX(-50%)",background:C.black,color:C.card,padding:"6px 16px",...rad,fontSize:11,...hd,fontFamily:ff,whiteSpace:"nowrap"}}>CHANGES SAVED</div>}
       <button onClick={onSave} style={{width:"100%",padding:"13px 24px",border:"none",...rad,background:C.black,color:C.card,fontSize:13,...hd,fontFamily:ff,cursor:"pointer"}}>SAVE CHANGES</button>
@@ -339,7 +339,7 @@ export function PasswordGate({pwInput, setPwInput, pwError, onSubmit, moduleName
         <div style={{fontSize:16,...hd,color:C.black,fontFamily:ff,marginBottom:6}}>AUTHORISATION REQUIRED</div>
         <div style={{fontSize:13,...bd,color:C.g50,fontFamily:ff,marginBottom:24,lineHeight:1.5}}>Enter the brief owner password to access {moduleName}.</div>
         <input type="password" value={pwInput} onChange={e=>{setPwInput(e.target.value);}} onKeyDown={e=>{if(e.key==="Enter")onSubmit();}} placeholder="Enter password..." style={{...bi,textAlign:"center",fontSize:14,marginBottom:12}}/>
-        {pwError&&<div style={{fontSize:12,color:"#ef4444",fontFamily:ff,marginBottom:12}}>Incorrect password. Please try again.</div>}
+        {pwError&&<div style={{fontSize:12,color:C.red,fontFamily:ff,marginBottom:12}}>Incorrect password. Please try again.</div>}
         <button onClick={onSubmit} style={{width:"100%",padding:"13px 24px",border:"none",...rad,background:C.black,color:C.card,fontSize:13,...hd,fontFamily:ff,cursor:"pointer"}}>UNLOCK</button>
       </Card>
     </div>
