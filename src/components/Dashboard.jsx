@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { C, ff, hd, bd, bi, rad, Card, BriefStatusSelect, BRIEF_STATUSES, Avatar, DEPT_COLORS } from "./shared";
+import { C, ff, hd, bd, bi, rad, Card, Avatar } from "./shared";
+import { loadDashboardProjects } from "../supabase";
 
 function useIsMobile(bp=768) {
   const [mob,setMob]=useState(typeof window!=="undefined"?window.innerWidth<=bp:false);
@@ -7,48 +8,24 @@ function useIsMobile(bp=768) {
   return mob;
 }
 
+// Matches the real status values ProjectActions actually writes
+// (App.js handleProjectAction) — "overdue" is derived, not stored.
 const PROJECT_STATUSES = [
-  {key:"draft",label:"DRAFT",color:C.g70},
-  {key:"briefing",label:"BRIEFING",color:C.blue},
-  {key:"in_progress",label:"IN PROGRESS",color:"#FFD93D"},
-  {key:"review",label:"REVIEW",color:"#C084FC"},
-  {key:"approved",label:"APPROVED",color:C.green},
-  {key:"delivered",label:"DELIVERED",color:C.black},
+  {key:"active",label:"ACTIVE",color:C.blue},
+  {key:"paused",label:"PAUSED",color:"#FFD93D"},
+  {key:"archived",label:"ARCHIVED",color:C.g70},
+  {key:"cancelled",label:"CANCELLED",color:"#FF6B6B"},
   {key:"overdue",label:"OVERDUE",color:"#FF6B6B"},
 ];
 
-const CHANNELS = ["Web","Email","Paid"];
-const CHANNEL_COLORS = { Web:C.red, Email:"#FFD93D", Paid:C.blue };
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const TODAY = new Date().toISOString().slice(0,10);
 
-const MOCK_PROJECTS = [
-  { id:"PEN-2025-0042",brand:"VortexSwim",title:"Summer 25 Launch",status:"in_progress",start:"2025-03-01",end:"2026-06-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Homepage Hero Banner",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PLP Category Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W03",channel:"Web",name:"Homepage Hero Banner",locale:"DE (GER)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-06-01",handoverDate:"2025-05-20"},{id:"E02",channel:"Email",name:"Promo Follow-Up",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf",sendDate:"2025-06-10",handoverDate:"2025-05-28"},{id:"E03",channel:"Email",name:"Launch Email",locale:"FR (FR)",status:"brief_added",assignedTo:"",sendDate:"2025-06-01",handoverDate:"2025-05-20"},{id:"P01",channel:"Paid",name:"PMAX 1200x628",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2025-0038",brand:"Apex Trail",title:"AW25 Digital Campaign",status:"review",start:"2025-02-15",end:"2026-04-30",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Hero Banner — AW25",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"PDP Feature Block",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"AW25 Teaser Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-03-15",handoverDate:"2025-03-01"},{id:"E02",channel:"Email",name:"AW25 Launch Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-04-01",handoverDate:"2025-03-18"},{id:"P01",channel:"Paid",name:"Display 728x90",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"}]},
-  { id:"PEN-2025-0035",brand:"Impact80",title:"Six Nations Promo",status:"delivered",start:"2025-01-10",end:"2025-03-20",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
-    briefs:[{id:"W01",channel:"Web",name:"Six Nations Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Builder CTA",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Match Day Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-02-10",handoverDate:"2025-01-28"},{id:"P01",channel:"Paid",name:"Social 1080x1920",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
-  { id:"PEN-2025-0031",brand:"VortexSwim",title:"SecondSkin Launch",status:"in_progress",start:"2025-01-05",end:"2025-12-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"SecondSkin PDP Hero",locale:"UK (ENG)",status:"handover",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Technology Explainer",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Pre-Launch Teaser",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2025-08-01",handoverDate:"2025-07-18"},{id:"E02",channel:"Email",name:"Launch Day Email",locale:"UK (ENG)",status:"awaiting_approval",assignedTo:"Farah Yousaf",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"E03",channel:"Email",name:"Launch Day Email",locale:"DE (GER)",status:"with_copy",assignedTo:"",sendDate:"2025-09-15",handoverDate:"2025-09-01"},{id:"P01",channel:"Paid",name:"PMAX 1200x300",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Display 300x250",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2025-0029",brand:"CAMPIONATO",title:"SS25 Social Push",status:"briefing",start:"2025-03-10",end:"2026-07-01",owner:"Farah Yousaf",modules:{overview:true,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Homepage Takeover",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"P01",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"P02",channel:"Paid",name:"Social 1080x1920",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2024-0112",brand:"Apex Trail",title:"Winter 24 Wrap-Up",status:"delivered",start:"2024-09-01",end:"2024-12-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:true,delivery:true,feedback:true},
-    briefs:[{id:"W01",channel:"Web",name:"Winter Sale Hero",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"},{id:"E01",channel:"Email",name:"Winter Sale Launch",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2024-11-01",handoverDate:"2024-10-18"},{id:"E02",channel:"Email",name:"Last Chance Email",locale:"UK (ENG)",status:"complete",assignedTo:"Farah Yousaf",sendDate:"2024-12-05",handoverDate:"2024-11-22"},{id:"P01",channel:"Paid",name:"Display 970x250",locale:"UK (ENG)",status:"complete",assignedTo:"Richard Palmer"}]},
-  { id:"PEN-2025-0044",brand:"Full90",title:"Grassroots Kit Launch",status:"draft",start:"2025-04-01",end:"2026-08-01",owner:"",modules:{overview:false,toolkit:false,brief:false,resources:false,approval:false,delivery:false,feedback:false},briefs:[]},
-  { id:"PEN-2025-0048",brand:"CAMPIONATO",title:"Heritage Collection",status:"review",start:"2025-06-01",end:"2026-01-15",owner:"Farah Yousaf",modules:{overview:true,toolkit:true,brief:true,resources:true,approval:false,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Heritage Landing Page",locale:"UK (ENG)",status:"with_design",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Heritage Landing Page",locale:"FR (FR)",status:"with_copy",assignedTo:""},{id:"E01",channel:"Email",name:"Heritage Launch Email",locale:"UK (ENG)",status:"with_design",assignedTo:"Farah Yousaf",sendDate:"2025-09-01",handoverDate:"2025-08-15"},{id:"P01",channel:"Paid",name:"PMAX 1200x1200",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"P02",channel:"Paid",name:"Social 1080x1350",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-  { id:"PEN-2025-0050",brand:"Impact80",title:"Lions Tour Kit",status:"in_progress",start:"2025-05-01",end:"2026-03-15",owner:"Richard Palmer",modules:{overview:true,toolkit:true,brief:false,resources:true,approval:false,delivery:false,feedback:false},
-    briefs:[{id:"W01",channel:"Web",name:"Lions Hero Banner",locale:"UK (ENG)",status:"with_copy",assignedTo:"Richard Palmer"},{id:"W02",channel:"Web",name:"Kit Customiser CTA",locale:"UK (ENG)",status:"brief_added",assignedTo:""},{id:"E01",channel:"Email",name:"Lions Announcement",locale:"UK (ENG)",status:"with_copy",assignedTo:"Farah Yousaf",sendDate:"2025-07-01",handoverDate:"2025-06-15"},{id:"P01",channel:"Paid",name:"Social 1080x1080",locale:"UK (ENG)",status:"brief_added",assignedTo:""}]},
-];
-
 const getEffectiveStatus = (p) => {
-  if(p.status==="delivered") return "delivered";
-  if(p.end < TODAY && p.status !== "delivered") return "overdue";
-  return p.status;
+  if(p.status==="archived"||p.status==="cancelled") return p.status;
+  if(p.end && p.end<TODAY && p.status!=="paused") return "overdue";
+  return p.status||"active";
 };
-
-const BRANDS = [...new Set(MOCK_PROJECTS.map(p=>p.brand))].sort();
 
 // Simple name-to-department lookup for avatar colours
 const NAME_DEPT = {"Richard Palmer":"Digital","Farah Yousaf":"Digital"};
@@ -77,139 +54,25 @@ function StatusBadge({status}) {
   </span>;
 }
 
-function ProgressBar({modules}) {
-  const total=Object.keys(modules).length;const done=Object.values(modules).filter(Boolean).length;const pct=Math.round((done/total)*100);
+function ProgressBar({pct}) {
   return(<div style={{display:"flex",alignItems:"center",gap:8}}><div style={{flex:1,height:6,background:C.g88,...rad,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:pct===100?C.green:pct>50?C.blue:C.g70,...rad,transition:"width 0.3s"}}/></div><span style={{fontSize:11,fontWeight:600,color:pct===100?C.green:C.g50,fontFamily:ff,minWidth:32}}>{pct}%</span></div>);
 }
 
 function DaysLabel({end, status}) {
-  if(status==="delivered") return <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>COMPLETE</span>;
+  if(status==="archived") return <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>ARCHIVED</span>;
+  if(!end) return <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>NO DUE DATE</span>;
   const diff=Math.ceil((new Date(end)-new Date(TODAY))/86400000);
   if(diff<0) return <span style={{fontSize:10,...hd,color:"#FF6B6B",fontFamily:ff}}>{Math.abs(diff)}d OVERDUE</span>;
   if(diff<=14) return <span style={{fontSize:10,...hd,color:"#FFD93D",fontFamily:ff}}>{diff}d LEFT</span>;
   return <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>{diff}d LEFT</span>;
 }
 
-// PROJECT DETAIL VIEW
-function ProjectDetail({ project, briefs, onBack, onUpdateStatus }) {
-  const mob = useIsMobile();
-  const [chFilter,setChFilter]=useState("all");
-  const [bsFilter,setBsFilter]=useState("all");
-  const [briefSort,setBriefSort]=useState("asc");
-  const es=getEffectiveStatus(project);
-
-  const filtered=briefs.filter(b=>{
-    if(chFilter!=="all"&&b.channel!==chFilter)return false;
-    if(bsFilter!=="all"&&b.status!==bsFilter)return false;
-    return true;
-  });
-
-  // Sort briefs within each channel group by sendDate (emails) or keep original order
-  const sortBriefs = (arr) => {
-    return [...arr].sort((a,b) => {
-      const da = a.sendDate || a.handoverDate || "9999-12-31";
-      const db = b.sendDate || b.handoverDate || "9999-12-31";
-      return briefSort === "asc" ? da.localeCompare(db) : db.localeCompare(da);
-    });
-  };
-
-  const grouped=CHANNELS.map(ch=>({channel:ch,briefs:sortBriefs(filtered.filter(b=>b.channel===ch))})).filter(g=>g.briefs.length>0);
-  const totalBriefs=briefs.length;const completeBriefs=briefs.filter(b=>b.status==="complete").length;
-  const pct=totalBriefs>0?Math.round((completeBriefs/totalBriefs)*100):0;
-
-  return (<div style={{display:"flex",flexDirection:"column",gap:14}}>
-    <button onClick={onBack} style={{display:"flex",alignItems:"center",gap:8,padding:"10px 16px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,fontSize:12,fontWeight:500,color:C.g50,alignSelf:"flex-start"}}>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
-      BACK TO DASHBOARD
-    </button>
-    <Card style={{padding:mob?"16px 18px":"24px 28px"}}>
-      <div style={{display:"flex",flexDirection:mob?"column":"row",alignItems:mob?"flex-start":"flex-start",justifyContent:"space-between",marginBottom:16,gap:mob?10:0}}>
-        <div>
-          <div style={{fontSize:11,...hd,color:C.g70,fontFamily:ff,marginBottom:4}}>{project.brand}</div>
-          <div style={{fontSize:mob?18:22,...hd,color:C.black,fontFamily:ff,letterSpacing:"0.02em"}}>{project.title}</div>
-          <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff,marginTop:4}}>{project.id} · {project.start} → {project.end}</div>
-        </div>
-        <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <StatusBadge status={es}/><DaysLabel end={project.end} status={es}/>
-          {project.owner&&<AvatarTooltip name={project.owner}/>}
-        </div>
-      </div>
-      <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
-        <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:C.black,fontFamily:ff}}>{totalBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>TOTAL BRIEFS</div></div>
-        <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:C.green,fontFamily:ff}}>{completeBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>COMPLETE</div></div>
-        <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{fontSize:22,fontWeight:700,color:totalBriefs-completeBriefs>0?"#FFD93D":C.g70,fontFamily:ff}}>{totalBriefs-completeBriefs}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:2}}>IN PROGRESS</div></div>
-        <div style={{padding:"12px 16px",background:C.g94,...rad,textAlign:"center"}}><div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:4}}><div style={{flex:1,maxWidth:80,height:6,background:C.g88,...rad,overflow:"hidden"}}><div style={{height:"100%",width:pct+"%",background:pct===100?C.green:C.blue,...rad}}/></div><span style={{fontSize:14,fontWeight:700,color:pct===100?C.green:C.black,fontFamily:ff}}>{pct}%</span></div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>BRIEF PROGRESS</div></div>
-      </div>
-    </Card>
-    <Card style={{padding:"12px 16px"}}>
-      <div style={{display:"flex",flexDirection:"column",gap:8}}>
-        <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",flexWrap:"wrap",gap:8}}>
-          <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-            <button onClick={()=>setChFilter("all")} style={{padding:"6px 12px",border:`1px solid ${chFilter==="all"?C.black:C.g88}`,...rad,background:chFilter==="all"?C.black:C.card,color:chFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
-            {CHANNELS.map(ch=><button key={ch} onClick={()=>setChFilter(f=>f===ch?"all":ch)} style={{padding:"6px 12px",border:`1px solid ${chFilter===ch?CHANNEL_COLORS[ch]:C.g88}`,...rad,background:chFilter===ch?CHANNEL_COLORS[ch]+"18":C.card,color:chFilter===ch?CHANNEL_COLORS[ch]:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{ch.toUpperCase()}</button>)}
-          </div>
-          <div style={{display:"flex",alignItems:"center",gap:6}}>
-            <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>DATE:</span>
-            <button onClick={()=>setBriefSort("asc")} style={{padding:"6px 12px",border:`1px solid ${briefSort==="asc"?C.black:C.g88}`,...rad,background:briefSort==="asc"?C.black:C.card,color:briefSort==="asc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>SOONEST</button>
-            <button onClick={()=>setBriefSort("desc")} style={{padding:"6px 12px",border:`1px solid ${briefSort==="desc"?C.black:C.g88}`,...rad,background:briefSort==="desc"?C.black:C.card,color:briefSort==="desc"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>LATEST</button>
-          </div>
-        </div>
-        <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
-          <button onClick={()=>setBsFilter("all")} style={{padding:"6px 12px",border:`1px solid ${bsFilter==="all"?C.black:C.g88}`,...rad,background:bsFilter==="all"?C.black:C.card,color:bsFilter==="all"?C.card:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>ALL</button>
-          {BRIEF_STATUSES.map(s=><button key={s.key} onClick={()=>setBsFilter(f=>f===s.key?"all":s.key)} style={{padding:"6px 12px",border:`1px solid ${bsFilter===s.key?s.color:C.g88}`,...rad,background:bsFilter===s.key?s.color+"18":C.card,color:bsFilter===s.key?s.color:C.g50,fontSize:10,...hd,fontFamily:ff,cursor:"pointer"}}>{s.label}</button>)}
-        </div>
-      </div>
-    </Card>
-    {grouped.length===0&&<Card style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>No briefs match your filters.</div></Card>}
-    {grouped.map(grp=>{const isEmail=grp.channel==="Email";return(<div key={grp.channel}>
-      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8,padding:"0 4px"}}><div style={{display:"flex",alignItems:"center",gap:10}}><div style={{width:4,height:16,...rad,background:CHANNEL_COLORS[grp.channel]}}/><span style={{fontSize:12,...hd,color:C.black,fontFamily:ff}}>{grp.channel.toUpperCase()} ASSETS</span><span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{grp.briefs.length} brief{grp.briefs.length!==1?"s":""}</span></div>{!mob&&<span style={{fontSize:10,...bd,color:C.g70,fontFamily:ff,fontStyle:"italic"}}>Select a brief to update</span>}</div>
-
-      {mob ? (
-        /* MOBILE: Brief Cards */
-        <div style={{display:"flex",flexDirection:"column",gap:8,marginBottom:12}}>
-          {grp.briefs.map(b=>(<div key={b.id+b.channel} style={{background:C.card,border:`1px solid ${C.g88}`,...rad,padding:16,borderLeft:`4px solid ${CHANNEL_COLORS[grp.channel]}`}}>
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:10}}>
-              <div style={{display:"flex",alignItems:"center",gap:8}}>
-                <span style={{fontSize:11,fontWeight:700,color:C.g50,fontFamily:ff}}>{b.id}</span>
-                <span style={{fontSize:13,fontWeight:600,color:C.black,fontFamily:ff}}>{b.name}</span>
-              </div>
-              {b.assignedTo&&<AvatarTooltip name={b.assignedTo}/>}
-            </div>
-            {b.sendDate&&<div style={{display:"flex",gap:12,marginBottom:8}}>
-              <div style={{fontSize:10,...bd,color:C.g50,fontFamily:ff}}><span style={{...hd,fontSize:9,color:C.g70}}>SEND </span>{b.sendDate}</div>
-              {b.handoverDate&&<div style={{fontSize:10,...bd,color:C.g50,fontFamily:ff}}><span style={{...hd,fontSize:9,color:C.g70}}>H/O </span>{b.handoverDate}</div>}
-            </div>}
-            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:8}}>
-              <span style={{fontSize:11,...bd,color:C.g50,fontFamily:ff}}>{b.locale}</span>
-              <BriefStatusSelect value={b.status} onChange={v=>onUpdateStatus(project.id,b.id,b.channel,v)}/>
-            </div>
-          </div>))}
-        </div>
-      ) : (
-        /* DESKTOP: Brief Table */
-        <div style={{background:C.card,border:`1px solid ${C.g88}`,...rad,overflow:"hidden",marginBottom:8}}>
-          <div style={{display:"grid",gridTemplateColumns:isEmail?"50px 1fr 100px 80px 80px 50px 180px":"50px 1fr 100px 50px 180px",padding:"10px 20px",background:C.g94,borderBottom:`1px solid ${C.g88}`,gap:10}}>
-            <span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>ID</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>BRIEF NAME</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>LOCALE</span>{isEmail&&<><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>SEND</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>HANDOVER</span></>}<span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>OWNER</span><span style={{fontSize:10,...hd,color:C.g50,fontFamily:ff}}>STATUS</span>
-          </div>
-          {grp.briefs.map((b,idx)=>(<div key={b.id+b.channel} style={{display:"grid",gridTemplateColumns:isEmail?"50px 1fr 100px 80px 80px 50px 180px":"50px 1fr 100px 50px 180px",padding:"14px 20px",borderBottom:idx<grp.briefs.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,borderLeft:`3px solid ${CHANNEL_COLORS[grp.channel]}`,cursor:"pointer",transition:"background 0.1s"}} onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
-            <div style={{fontSize:12,fontWeight:600,color:C.g50,fontFamily:ff}}>{b.id}</div>
-            <div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{b.name}</div>
-            <div style={{fontSize:12,...bd,color:C.g50,fontFamily:ff}}>{b.locale}</div>
-            {isEmail&&<><div style={{fontSize:11,...bd,color:b.sendDate?C.black:C.g70,fontFamily:ff}}>{b.sendDate||"—"}</div><div style={{fontSize:11,...bd,color:b.handoverDate?C.black:C.g70,fontFamily:ff}}>{b.handoverDate||"—"}</div></>}
-            <AvatarTooltip name={b.assignedTo}/>
-            <BriefStatusSelect value={b.status} onChange={v=>onUpdateStatus(project.id,b.id,b.channel,v)}/>
-          </div>))}
-        </div>
-      )}
-    </div>);})}
-  </div>);
-}
-
 // MAIN DASHBOARD
-export default function Dashboard({ setView, setJobNum }) {
+export default function Dashboard({ onOpenProject }) {
   const mob = useIsMobile();
-  const [projects,setProjects]=useState(MOCK_PROJECTS);
-  const [selectedProject,setSelectedProject]=useState(null);
+  const [projects,setProjects]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [loadError,setLoadError]=useState(false);
   const [filter,setFilter]=useState("all");
   const [brandFilter,setBrandFilter]=useState("all");
   const [channelFilter,setChannelFilter]=useState("all");
@@ -217,39 +80,56 @@ export default function Dashboard({ setView, setJobNum }) {
   const [dateSort,setDateSort]=useState("end_asc");
   const [search,setSearch]=useState("");
 
-  const updateBriefStatus=(projectId,briefId,channel,newStatus)=>{
-    setProjects(prev=>prev.map(p=>{if(p.id!==projectId)return p;return{...p,briefs:p.briefs.map(b=>b.id===briefId&&b.channel===channel?{...b,status:newStatus}:b)};}));
+  const refresh=()=>{
+    setLoading(true);setLoadError(false);
+    loadDashboardProjects().then(data=>{setProjects(data);setLoading(false);}).catch(()=>{setLoadError(true);setLoading(false);});
   };
+  useEffect(()=>{refresh();
+    // eslint-disable-next-line
+  },[]);
 
+  const BRANDS=[...new Set(projects.map(p=>p.brand))].filter(Boolean).sort();
   const withStatus=projects.map(p=>({...p,effectiveStatus:getEffectiveStatus(p)}));
 
   const filtered=withStatus.filter(p=>{
     if(filter!=="all"&&p.effectiveStatus!==filter)return false;
     if(brandFilter!=="all"&&p.brand!==brandFilter)return false;
     if(channelFilter!=="all"&&!p.briefs.some(b=>b.channel===channelFilter))return false;
-    if(monthFilter!=="all"){const endMonth=new Date(p.end).getMonth();if(endMonth!==parseInt(monthFilter))return false;}
+    if(monthFilter!=="all"){if(!p.end)return false;const endMonth=new Date(p.end).getMonth();if(endMonth!==parseInt(monthFilter))return false;}
     if(search){const s=search.toLowerCase();return p.id.toLowerCase().includes(s)||p.brand.toLowerCase().includes(s)||p.title.toLowerCase().includes(s);}
     return true;
   }).sort((a,b)=>{
-    if(dateSort==="end_asc")return a.end.localeCompare(b.end);
-    if(dateSort==="end_desc")return b.end.localeCompare(a.end);
-    if(dateSort==="start_asc")return a.start.localeCompare(b.start);
-    if(dateSort==="start_desc")return b.start.localeCompare(a.start);
+    const ea=a.end||"9999-12-31",eb=b.end||"9999-12-31",sa=a.start||"9999-12-31",sb=b.start||"9999-12-31";
+    if(dateSort==="end_asc")return ea.localeCompare(eb);
+    if(dateSort==="end_desc")return eb.localeCompare(ea);
+    if(dateSort==="start_asc")return sa.localeCompare(sb);
+    if(dateSort==="start_desc")return sb.localeCompare(sa);
     return 0;
   });
 
-  const stats={total:withStatus.length,active:withStatus.filter(p=>!["delivered","draft","overdue"].includes(p.effectiveStatus)).length,delivered:withStatus.filter(p=>p.effectiveStatus==="delivered").length,overdue:withStatus.filter(p=>p.effectiveStatus==="overdue").length};
+  const stats={total:withStatus.length,active:withStatus.filter(p=>p.effectiveStatus==="active").length,archived:withStatus.filter(p=>p.effectiveStatus==="archived").length,overdue:withStatus.filter(p=>p.effectiveStatus==="overdue").length};
 
-  // Detail view
-  if(selectedProject){const proj=projects.find(p=>p.id===selectedProject);if(proj)return <ProjectDetail project={proj} briefs={proj.briefs} onBack={()=>setSelectedProject(null)} onUpdateStatus={updateBriefStatus}/>;}
+  const pctFor=(p)=>{const total=p.briefs.length;if(!total)return 0;const done=p.briefs.filter(b=>b.status==="complete").length;return Math.round((done/total)*100);};
 
-  // List view
+  if(loading) return (
+    <Card style={{padding:"40px 20px",textAlign:"center"}}>
+      <div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>Loading projects…</div>
+    </Card>
+  );
+
+  if(loadError) return (
+    <Card style={{padding:"40px 20px",textAlign:"center"}}>
+      <div style={{fontSize:13,color:"#FF6B6B",fontFamily:ff,...bd,marginBottom:12}}>Couldn't load projects from the database.</div>
+      <button onClick={refresh} style={{padding:"10px 20px",border:"none",...rad,background:C.black,color:C.card,fontSize:11,...hd,fontFamily:ff,cursor:"pointer"}}>RETRY</button>
+    </Card>
+  );
+
   return (
     <div style={{display:"flex",flexDirection:"column",gap:14}}>
       <div style={{display:"grid",gridTemplateColumns:mob?"repeat(2,1fr)":"repeat(4,1fr)",gap:10}}>
         <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.black,fontFamily:ff}}>{stats.total}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>TOTAL</div></Card>
         <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.blue,fontFamily:ff}}>{stats.active}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>ACTIVE</div></Card>
-        <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.green,fontFamily:ff}}>{stats.delivered}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>DELIVERED</div></Card>
+        <Card style={{padding:"14px 16px",textAlign:"center"}}><div style={{fontSize:mob?22:26,fontWeight:700,color:C.g70,fontFamily:ff}}>{stats.archived}</div><div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,marginTop:4}}>ARCHIVED</div></Card>
         <Card style={{padding:"14px 16px",textAlign:"center",border:stats.overdue>0?"1px solid #FF6B6B33":`1px solid ${C.g88}`}}><div style={{fontSize:mob?22:26,fontWeight:700,color:stats.overdue>0?"#FF6B6B":C.g70,fontFamily:ff}}>{stats.overdue}</div><div style={{fontSize:9,...hd,color:stats.overdue>0?"#FF6B6B":C.g70,fontFamily:ff,marginTop:4}}>OVERDUE</div></Card>
       </div>
 
@@ -260,15 +140,18 @@ export default function Dashboard({ setView, setJobNum }) {
             {mob ? (
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:6,width:"100%"}}>
                 <select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="all">All Brands</option>{BRANDS.map(b=><option key={b} value={b}>{b}</option>)}</select>
-                <select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="all">All Channels</option>{CHANNELS.map(ch=><option key={ch} value={ch}>{ch}</option>)}</select>
+                <select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="all">All Channels</option>{["Web","Email","Paid"].map(ch=><option key={ch} value={ch}>{ch}</option>)}</select>
                 <select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="all">All Months</option>{MONTHS.map((m,i)=><option key={i} value={i}>{m}</option>)}</select>
                 <select value={dateSort} onChange={e=>setDateSort(e.target.value)} style={{...bi,fontSize:12,cursor:"pointer",padding:"8px 10px"}}><option value="end_asc">Due (Soonest)</option><option value="end_desc">Due (Latest)</option><option value="start_asc">Start (Earliest)</option><option value="start_desc">Start (Latest)</option></select>
               </div>
             ) : (<>
               <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>BRAND:</span><select value={brandFilter} onChange={e=>setBrandFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Brands</option>{BRANDS.map(b=><option key={b} value={b}>{b}</option>)}</select></div>
-              <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>CHANNEL:</span><select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Channels</option>{CHANNELS.map(ch=><option key={ch} value={ch}>{ch}</option>)}</select></div>
+              <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>CHANNEL:</span><select value={channelFilter} onChange={e=>setChannelFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Channels</option>{["Web","Email","Paid"].map(ch=><option key={ch} value={ch}>{ch}</option>)}</select></div>
               <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>MONTH:</span><select value={monthFilter} onChange={e=>setMonthFilter(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="all">All Months</option>{MONTHS.map((m,i)=><option key={i} value={i}>{m}</option>)}</select></div>
               <div style={{display:"flex",alignItems:"center",gap:6}}><span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>DATE:</span><select value={dateSort} onChange={e=>setDateSort(e.target.value)} style={{...bi,width:"auto",fontSize:12,cursor:"pointer",padding:"8px 12px"}}><option value="end_asc">Due (Soonest)</option><option value="end_desc">Due (Latest)</option><option value="start_asc">Start (Earliest)</option><option value="start_desc">Start (Latest)</option></select></div>
+              <button onClick={refresh} title="Refresh" style={{marginLeft:"auto",padding:"8px 10px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",display:"flex",alignItems:"center"}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={C.g50} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 4v6h-6"/><path d="M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+              </button>
             </>)}
           </div>
           <div style={{display:"flex",gap:4,flexWrap:"wrap"}}>
@@ -278,13 +161,13 @@ export default function Dashboard({ setView, setJobNum }) {
         </div>
       </Card>
 
-      {filtered.length===0&&<Card style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>No projects match your filters.</div></Card>}
+      {filtered.length===0&&<Card style={{padding:"40px 20px",textAlign:"center"}}><div style={{fontSize:13,color:C.g50,fontFamily:ff,...bd}}>{projects.length===0?"No projects yet — create one from the Project Hub to see it here.":"No projects match your filters."}</div></Card>}
 
       {mob ? (
         /* MOBILE: Project Cards */
         <div style={{display:"flex",flexDirection:"column",gap:10}}>
           {filtered.map(p=>{const sc=PROJECT_STATUSES.find(x=>x.key===p.effectiveStatus);const tabCol=sc?sc.color:C.g88;return(
-            <div key={p.id} onClick={()=>setSelectedProject(p.id)} style={{background:C.card,border:`1px solid ${C.g88}`,...rad,padding:16,borderLeft:`4px solid ${tabCol}`,cursor:"pointer"}}>
+            <div key={p.id} onClick={()=>onOpenProject(p.id)} style={{background:C.card,border:`1px solid ${C.g88}`,...rad,padding:16,borderLeft:`4px solid ${tabCol}`,cursor:"pointer"}}>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:8}}>
                 <div style={{display:"flex",alignItems:"center",gap:8}}>
                   <span style={{fontSize:11,fontWeight:700,color:C.g50,fontFamily:ff}}>{p.id}</span>
@@ -300,8 +183,8 @@ export default function Dashboard({ setView, setJobNum }) {
                 <DaysLabel end={p.end} status={p.effectiveStatus}/>
               </div>
               <div style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
-                <span style={{fontSize:11,...bd,color:C.g70,fontFamily:ff}}>{p.start} → {p.end}</span>
-                <ProgressBar modules={p.modules}/>
+                <span style={{fontSize:11,...bd,color:C.g70,fontFamily:ff}}>{p.start||"—"} → {p.end||"—"}</span>
+                <ProgressBar pct={pctFor(p)}/>
               </div>
               {p.briefs.length>0&&<div style={{marginTop:8,paddingTop:8,borderTop:`1px solid ${C.g94}`,display:"flex",alignItems:"center",gap:6}}>
                 <span style={{fontSize:10,...hd,color:C.g70,fontFamily:ff}}>{p.briefs.length} BRIEF{p.briefs.length!==1?"S":""}</span>
@@ -319,15 +202,15 @@ export default function Dashboard({ setView, setJobNum }) {
           </div>
           {filtered.map((p,idx)=>{const sc=PROJECT_STATUSES.find(x=>x.key===p.effectiveStatus);const tabCol=sc?sc.color:C.g88;return(
             <div key={p.id} style={{display:"grid",gridTemplateColumns:"120px 80px 1fr 50px 110px 80px 130px",padding:"14px 20px",borderBottom:idx<filtered.length-1?`1px solid ${C.g94}`:"none",alignItems:"center",gap:10,cursor:"pointer",transition:"background 0.1s",borderLeft:`3px solid ${tabCol}`}}
-              onClick={()=>setSelectedProject(p.id)}
+              onClick={()=>onOpenProject(p.id)}
               onMouseEnter={e=>e.currentTarget.style.background=C.g94} onMouseLeave={e=>e.currentTarget.style.background="transparent"}>
               <div style={{fontSize:13,fontWeight:600,color:C.black,fontFamily:ff}}>{p.id}</div>
               <div style={{fontSize:12,color:C.g50,fontFamily:ff,...bd}}>{p.brand}</div>
-              <div><div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{p.title}</div><div style={{fontSize:11,color:C.g70,fontFamily:ff,...bd,marginTop:1}}>{p.start} → {p.end}</div></div>
+              <div><div style={{fontSize:13,fontWeight:500,color:C.black,fontFamily:ff}}>{p.title}</div><div style={{fontSize:11,color:C.g70,fontFamily:ff,...bd,marginTop:1}}>{p.start||"—"} → {p.end||"—"}</div></div>
               <AvatarTooltip name={p.owner}/>
               <StatusBadge status={p.effectiveStatus}/>
               <DaysLabel end={p.end} status={p.effectiveStatus}/>
-              <ProgressBar modules={p.modules}/>
+              <ProgressBar pct={pctFor(p)}/>
             </div>
           );})}
         </Card>

@@ -19,6 +19,60 @@ export async function loadProjects() {
   return data || [];
 }
 
+// Load all projects PLUS their web/email/paid briefs in one go, shaped
+// for the Dashboard table/cards. This is what actually powers the
+// dashboard — loadProjects() alone only returns the bare project rows.
+export async function loadDashboardProjects() {
+  const projects = await loadProjects();
+  if (projects.length === 0) return [];
+  const ids = projects.map(p => p.id);
+
+  const [{ data: webRows }, { data: emailRows }, { data: paidRows }] = await Promise.all([
+    supabase.from('web_assets').select('*').in('project_id', ids),
+    supabase.from('email_assets').select('*').in('project_id', ids),
+    supabase.from('paid_media').select('*').in('project_id', ids),
+  ]);
+
+  return projects.map(p => {
+    const web = (webRows || []).filter(r => r.project_id === p.id);
+    const email = (emailRows || []).filter(r => r.project_id === p.id);
+    const paid = (paidRows || []).filter(r => r.project_id === p.id);
+    const briefs = [];
+    let owner = '';
+
+    web.forEach(row => {
+      (row.parts || []).forEach((part, i) => {
+        briefs.push({ id: `W${row.num || ''}-${i}`, channel: 'Web', name: row.name || 'Untitled', locale: part.locale || '', status: part.briefStatus || 'brief_added', assignedTo: row.owner || '' });
+        if (!owner && row.owner) owner = row.owner;
+      });
+    });
+    email.forEach(row => {
+      (row.parts || []).forEach((part, i) => {
+        briefs.push({ id: `E${row.num || ''}-${i}`, channel: 'Email', name: row.name || 'Untitled', locale: part.locale || '', status: part.briefStatus || 'brief_added', assignedTo: row.owner || '', sendDate: row.send_date || '', handoverDate: row.handover_date || '' });
+        if (!owner && row.owner) owner = row.owner;
+      });
+    });
+    paid.forEach(row => {
+      const hasContent = row.hero_image || row.copy_requirements || row.video_content || (row.sizes && Object.keys(row.sizes).length > 0);
+      if (hasContent) {
+        briefs.push({ id: 'P01', channel: 'Paid', name: 'Paid Media Brief', locale: '—', status: row.copy_requirements && row.hero_image ? 'with_design' : 'brief_added', assignedTo: row.owner || '' });
+        if (!owner && row.owner) owner = row.owner;
+      }
+    });
+
+    return {
+      id: p.job_number,
+      brand: p.brand || '—',
+      title: p.title || 'Untitled Project',
+      status: p.status || 'active',
+      start: p.start_date || '',
+      end: p.end_date || '',
+      owner,
+      briefs,
+    };
+  });
+}
+
 // Load a single project by job number
 export async function loadProject(jobNumber) {
   const { data, error } = await supabase

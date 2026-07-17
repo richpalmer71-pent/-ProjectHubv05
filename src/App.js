@@ -84,18 +84,23 @@ export default function App(){
     setModDirty(d=>({...d,[mod]:false}));setModSaved(s=>({...s,[mod]:true}));setTimeout(()=>setModSaved(s=>({...s,[mod]:false})),3000);
     // Dropbox trigger on first save
     if(mod==="overview"&&isRealJobNum(jobNum)&&title&&!dbxCreated){createDropboxFolders(jobNum,title,brand);}
-    // Save to Supabase
-    if(mod==="overview"&&jobNum){
+    // Ensure the project row exists before saving anything that hangs off
+    // it. Previously, saving Toolkit or Brief before ever touching
+    // Overview silently did nothing — dbProjectId was still null, so the
+    // guarded saves below never ran, and the project was never written
+    // to Supabase at all (which is why new jobs could vanish entirely).
+    let pid=dbProjectId;
+    if(jobNum&&(mod==="overview"||!pid)){
       const proj=await saveProject({job_number:jobNum,brand,title,objective,locales,start_date:sd,end_date:ed,handover_date:hd2,channels:ch,status:projectStatus});
-      if(proj)setDbProjectId(proj.id);
+      if(proj){pid=proj.id;setDbProjectId(proj.id);}
     }
-    if(mod==="toolkit"&&dbProjectId){
-      await saveToolkit(dbProjectId,{toolkit_title:tkTitle,dam_link:damLink,asset_bank_link:abLink,design_files:dFiles,copy_toolkit:cpTk,brand_guidelines:bGuid});
+    if(mod==="toolkit"&&pid){
+      await saveToolkit(pid,{toolkit_title:tkTitle,dam_link:damLink,asset_bank_link:abLink,design_files:dFiles,copy_toolkit:cpTk,brand_guidelines:bGuid});
     }
-    if(mod==="brief"&&dbProjectId){
-      await saveWebAssets(dbProjectId,webAssets);
-      await saveEmailAssets(dbProjectId,emails);
-      await savePaidMedia(dbProjectId,{sizes:ps,other_sizes:os,hero_image:phi,copy_requirements:pc,video_content:pv,owner:paidOwner});
+    if(mod==="brief"&&pid){
+      await saveWebAssets(pid,webAssets);
+      await saveEmailAssets(pid,emails);
+      await savePaidMedia(pid,{sizes:ps,other_sizes:os,hero_image:phi,copy_requirements:pc,video_content:pv,owner:paidOwner});
     }
   };
 
@@ -152,6 +157,17 @@ export default function App(){
     setDbLoading(false);
     return true;
   },[]);
+
+  // Navigate straight into a project — same flow as typing a job number
+  // on the landing page and hitting GO. Used by Dashboard project
+  // clicks and the sidebar quick-search.
+  const goToProject=useCallback(async(jn)=>{
+    const trimmed=(jn||"").trim();
+    if(!trimmed)return;
+    setJobNum(trimmed);setDbxCreated(false);
+    await loadFromDb(trimmed);
+    setView("project");
+  },[loadFromDb]);
 
   const [view,setView]=useState("landing"); const [searchJob,setSearchJob]=useState("");
   const [sidebarOpen,setSidebarOpen]=useState(false);
@@ -302,7 +318,7 @@ export default function App(){
           </div>
           <button onClick={()=>setView("landing")} style={{padding:"10px 20px",border:`1px solid ${C.g88}`,...rad,background:C.card,cursor:"pointer",fontFamily:ff,fontSize:12,fontWeight:500,color:C.g50}}>BACK TO HUB</button>
         </div>
-        <Dashboard setView={setView} setJobNum={setJobNum}/>
+        <Dashboard onOpenProject={goToProject}/>
       </div>
     </div>
   );
@@ -372,7 +388,7 @@ export default function App(){
   const ML = (sub, label, accent, content) => (
     <div style={{minHeight:"100vh",background:C.bg,fontFamily:ff}}>
       <style>{GS}</style>
-      <Sidebar view={view} setView={setView} jobNum={jobNum} open={sidebarOpen} setOpen={setSidebarOpen}/>
+      <Sidebar view={view} setView={setView} jobNum={jobNum} open={sidebarOpen} setOpen={setSidebarOpen} onGoToProject={goToProject}/>
       <div className="main-content" style={{marginLeft:250,padding:"32px 40px 60px"}}>
         {actionMsg&&<div style={{marginBottom:16,padding:"10px 18px",background:projectStatus==="cancelled"?"#FF6B6B":projectStatus==="paused"?"#FFD93D":projectStatus==="archived"?C.g50:C.green,color:C.card,...rad,fontSize:12,...hd,fontFamily:ff,textAlign:"center"}}>{actionMsg}</div>}
         {projectStatus!=="active"&&<div style={{marginBottom:16,padding:"12px 18px",border:`1px solid ${projectStatus==="cancelled"?"#FF6B6B33":projectStatus==="paused"?"#FFD93D33":C.g88}`,...rad,background:C.card,display:"flex",alignItems:"center",gap:10}}>

@@ -236,9 +236,17 @@ export function ProjectActions({onAction, projectStatus}) {
 }
 
 // Sidebar with Chat + Chatbot
-export function Sidebar({view, setView, jobNum, open, setOpen}) {
+export function Sidebar({view, setView, jobNum, open, setOpen, onGoToProject}) {
   const [chatOpen,setChatOpen]=useState(false);
   const [botOpen,setBotOpen]=useState(false);
+  const [jumpTo,setJumpTo]=useState("");
+  const goJump=()=>{
+    const v=jumpTo.trim();
+    if(!v||!onGoToProject)return;
+    onGoToProject(v);
+    setJumpTo("");
+    setOpen(false);
+  };
   const [chatMsgs,setChatMsgs]=useState([{id:1,user:"System",text:"Project chat started. Say hello to your team!",time:"—",isSystem:true}]);
   const [chatInput,setChatInput]=useState("");
   const [botMsgs,setBotMsgs]=useState([{id:1,from:"bot",text:"Hi! I'm your Project Hub assistant. I can help with questions about briefing, approvals, asset delivery, and more. What can I help you with?"}]);
@@ -272,6 +280,12 @@ export function Sidebar({view, setView, jobNum, open, setOpen}) {
       {jobNum&&<div style={{margin:"0 14px 14px",padding:"10px 14px",background:C.panel,...rad,border:`1px solid ${C.g88}`}}>
         <div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff}}>CURRENT PROJECT</div>
         <div style={{fontSize:13,fontWeight:600,color:C.black,fontFamily:ff,marginTop:2}}>{jobNum}</div>
+      </div>}
+      {onGoToProject&&<div style={{margin:"0 14px 14px",display:"flex",gap:6}}>
+        <input value={jumpTo} onChange={e=>setJumpTo(e.target.value)} onKeyDown={e=>e.key==="Enter"&&goJump()} placeholder="Jump to job number..." style={{...bi,flex:1,fontSize:12,padding:"8px 10px"}}/>
+        <button onClick={goJump} title="Go" style={{padding:"0 12px",border:"none",...rad,background:C.black,color:C.card,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center"}}>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+        </button>
       </div>}
       <div style={{padding:"0 10px",flex:1,overflowY:"auto"}}>
         <div style={{fontSize:9,...hd,color:C.g70,fontFamily:ff,padding:"8px 12px 6px"}}>MODULES</div>
